@@ -18,15 +18,13 @@ inferenceExtension:
   pluginsConfigFile: "custom-plugins.yaml"
   pluginsCustomConfig:
     custom-plugins.yaml: |
-      # ALWAYS DO PD IN THIS EXAMPLE (THRESHOLD 0)
+      # NEVER DO PD IN THIS EXAMPLE (THRESHOLD 0)
       # This example uses random routing 
       # since it's not yet possible to route to individual DP ranks
       apiVersion: inference.networking.x-k8s.io/v1alpha1
       kind: EndpointPickerConfig
       plugins:
-      - type: prefill-header-handler
-      - type: prefill-filter
-      - type: decode-filter
+      - type: single-profile-handler
       - type: random-picker
         parameters:
           maxNumOfEndpoints: 1
@@ -35,13 +33,8 @@ inferenceExtension:
           threshold: 0
           hashBlockSize: 5
       schedulingProfiles:
-      - name: prefill
+      - name: default
         plugins:
-        - pluginRef: prefill-filter
-        - pluginRef: random-picker
-      - name: decode
-        plugins:
-        - pluginRef: decode-filter
         - pluginRef: random-picker
   flags:
     - name: v
