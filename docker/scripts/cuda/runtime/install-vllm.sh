@@ -63,6 +63,9 @@ else
   fi
 fi
 
+# debug: print desired package list
+echo "DEBUG: Installing packages: ${INSTALL_PACKAGES[*]}"
+
 # install all packages in one command
 uv pip install "${INSTALL_PACKAGES[@]}"
 
