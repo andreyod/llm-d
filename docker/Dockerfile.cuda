@@ -85,13 +85,17 @@ RUN mkdir -p /wheels
 # Copy patches before build
 COPY patches/ /tmp/patches/
 
-# Build and install NVSHMEM from source with coreweave patch
+# Build and install NVSHMEM from source with coreweave patch (skip on ARM64)
 COPY docker/scripts/cuda/builder/build-nvshmem.sh /tmp/build-nvshmem.sh
 RUN --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
-    NVSHMEM_CUDA_ARCHITECTURES="${NVSHMEM_CUDA_ARCHITECTURES}" \
     chmod +x /tmp/build-nvshmem.sh && \
-    /tmp/build-nvshmem.sh && \
+    if [ "${TARGETPLATFORM}" != "linux/arm64" ]; then \
+        NVSHMEM_CUDA_ARCHITECTURES="${NVSHMEM_CUDA_ARCHITECTURES}" /tmp/build-nvshmem.sh; \
+    else \
+        echo "Skipping NVSHMEM build on ARM64"; \
+        mkdir -p "${NVSHMEM_DIR}"; \
+    fi && \
     rm /tmp/build-nvshmem.sh
 
 # Pin torch, so all deps are built against the same version
@@ -153,7 +157,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
     chmod +x /tmp/build-compiled-wheels.sh && \
-    /tmp/build-compiled-wheels.sh && \
+    TARGETPLATFORM=${TARGETPLATFORM} /tmp/build-compiled-wheels.sh && \
     rm /tmp/build-compiled-wheels.sh
 
 # ============================================================================
