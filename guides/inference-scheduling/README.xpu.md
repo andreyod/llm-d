@@ -196,6 +196,8 @@ kubectl create secret generic $HF_TOKEN_NAME \
     --namespace ${NAMESPACE}
 ```
 
+**_IMPORTANT:_** When using long namespace names (like `llm-d-inference-scheduler`), the generated pod hostnames may become too long and cause issues due to Linux hostname length limitations (typically 64 characters maximum). It's recommended to use shorter namespace names (like `llm-d`) and set `RELEASE_NAME_POSTFIX` to generate shorter hostnames and avoid potential networking or vLLM startup problems.
+
 **Note**: For public models, you can use any valid HuggingFace token or leave it empty.
 
 ## Step 7: Deploy Intel XPU Inference Scheduling
