@@ -83,6 +83,10 @@ RUN mkdir -p /wheels
 
 # NVSHMEM now installed from nvidia repos (libnvshmem3-cuda-${CUDA_MAJOR}-3.4.5-1)
 # No need to build from source anymore
+# Create symlink structure for DeepEP's setup.py which expects $NVSHMEM_DIR/lib and $NVSHMEM_DIR/include
+RUN mkdir -p /usr/bin/nvshmem_${CUDA_MAJOR} && \
+    ln -sf /usr/lib64/nvshmem/${CUDA_MAJOR} /usr/bin/nvshmem_${CUDA_MAJOR}/lib && \
+    ln -sf /usr/include/nvshmem_${CUDA_MAJOR} /usr/bin/nvshmem_${CUDA_MAJOR}/include
 
 # Pin torch, so all deps are built against the same version
 # as vllm itself
