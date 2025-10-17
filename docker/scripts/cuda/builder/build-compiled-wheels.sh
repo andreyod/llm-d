@@ -60,7 +60,7 @@ rm -rf deepgemm
 git clone "${PPLX_KERNELS_REPO}" pplx-kernels
 cd pplx-kernels
 git checkout "${PPLX_KERNELS_SHA}"
-NVSHMEM_PREFIX="${NVSHMEM_DIR}" uv build --wheel --out-dir /wheels
+TORCH_CUDA_ARCH_LIST="9.0a;10.0+PTX" NVSHMEM_PREFIX="${NVSHMEM_DIR}" uv build --wheel --out-dir /wheels
 cd ..
 rm -rf pplx-kernels
 
