@@ -1,5 +1,5 @@
 ARG ONEAPI_VERSION=2025.1.3-0
-ARG VLLM_VERSION=3cd36660f72f75b888c82a8feac93ea9f17c8e1e
+ARG VLLM_VERSION=v0.11.0
 
 FROM intel/deep-learning-essentials:${ONEAPI_VERSION}-devel-ubuntu24.04 AS vllm-base
 
