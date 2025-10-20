@@ -10,16 +10,6 @@ set -Eeu
 TARGETOS="${TARGETOS:-rhel}"
 
 if [ "${USE_SCCACHE}" = "true" ]; then
-    # install openssl development package based on OS
-    if [ "$TARGETOS" = "ubuntu" ]; then
-        apt-get update -qq && apt-get install -y libssl-dev
-    elif [ "$TARGETOS" = "rhel" ]; then
-        dnf install -y openssl-devel
-    else
-        echo "ERROR: Unsupported TARGETOS='$TARGETOS'. Must be 'ubuntu' or 'rhel'." >&2
-        exit 1
-    fi
-
     # detect architecture
     ARCH=$(uname -m)
     if [ "$ARCH" = "x86_64" ]; then
