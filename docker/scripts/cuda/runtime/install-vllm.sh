@@ -8,9 +8,13 @@ set -Eeu
 # - VLLM_COMMIT_SHA: vLLM commit SHA to checkout
 # - VLLM_PREBUILT: whether to use prebuilt wheel (1/0)
 # - VLLM_USE_PRECOMPILED: whether to use precompiled binaries (1/0)
+# - VLLM_PRECOMPILED_WHEEL_COMMIT: commit SHA for precompiled wheel lookup (defaults to VLLM_COMMIT_SHA)
 
 # shellcheck source=/dev/null
 source /opt/vllm/bin/activate
+
+# default VLLM_PRECOMPILED_WHEEL_COMMIT to VLLM_COMMIT_SHA if not set
+VLLM_PRECOMPILED_WHEEL_COMMIT="${VLLM_PRECOMPILED_WHEEL_COMMIT:-${VLLM_COMMIT_SHA}}"
 
 # build list of packages to install
 INSTALL_PACKAGES=(
@@ -26,12 +30,12 @@ git -C /opt/vllm-source config --system --add safe.directory /opt/vllm-source
 git -C /opt/vllm-source fetch --depth=1 origin "${VLLM_COMMIT_SHA}" || true
 git -C /opt/vllm-source checkout -q "${VLLM_COMMIT_SHA}"
 
-# detect if prebuilt wheel exists
+# detect if prebuilt wheel exists (using VLLM_PRECOMPILED_WHEEL_COMMIT for lookup)
 WHEEL_URL=$(pip install \
   --no-cache-dir \
   --no-index \
   --no-deps \
-  --find-links "https://wheels.vllm.ai/${VLLM_COMMIT_SHA}/vllm/" \
+  --find-links "https://wheels.vllm.ai/${VLLM_PRECOMPILED_WHEEL_COMMIT}/vllm/" \
   --only-binary=:all: \
   --pre vllm \
   --dry-run \
@@ -42,14 +46,14 @@ WHEEL_URL=$(pip install \
 
 if [ "${VLLM_PREBUILT}" = "1" ]; then
   if [ -z "${WHEEL_URL}" ]; then
-    echo "VLLM_PREBUILT set but no platform compatible wheel exists for: https://wheels.vllm.ai/${VLLM_COMMIT_SHA}/vllm/"
+    echo "VLLM_PREBUILT set but no platform compatible wheel exists for: https://wheels.vllm.ai/${VLLM_PRECOMPILED_WHEEL_COMMIT}/vllm/"
     exit 1
   fi
   INSTALL_PACKAGES+=("${WHEEL_URL}")
   rm /opt/warn-vllm-precompiled.sh
 else
   if [ "${VLLM_USE_PRECOMPILED}" = "1" ] && [ -n "${WHEEL_URL}" ]; then
-    echo "Using precompiled binaries and shared libraries for commit: ${VLLM_COMMIT_SHA}."
+    echo "Using precompiled binaries and shared libraries from commit: ${VLLM_PRECOMPILED_WHEEL_COMMIT} (source: ${VLLM_COMMIT_SHA})."
     export VLLM_USE_PRECOMPILED=1
     export VLLM_PRECOMPILED_WHEEL_LOCATION="${WHEEL_URL}"
     INSTALL_PACKAGES+=(-e /opt/vllm-source)
