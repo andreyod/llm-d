@@ -5,9 +5,20 @@ set -Eeu
 #
 # Required environment variables:
 # - USE_SCCACHE: whether to install and configure sccache (true/false)
+# - TARGETOS: Target OS - either 'ubuntu' or 'rhel' (default: rhel)
+
+TARGETOS="${TARGETOS:-rhel}"
 
 if [ "${USE_SCCACHE}" = "true" ]; then
-    dnf install -y openssl-devel
+    # install openssl development package based on OS
+    if [ "$TARGETOS" = "ubuntu" ]; then
+        apt-get update -qq && apt-get install -y libssl-dev
+    elif [ "$TARGETOS" = "rhel" ]; then
+        dnf install -y openssl-devel
+    else
+        echo "ERROR: Unsupported TARGETOS='$TARGETOS'. Must be 'ubuntu' or 'rhel'." >&2
+        exit 1
+    fi
 
     # detect architecture
     ARCH=$(uname -m)

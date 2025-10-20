@@ -26,7 +26,7 @@ COPY docker/scripts/cuda/builder/install-sccache.sh /tmp/install-sccache.sh
 RUN --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
     chmod +x /tmp/install-sccache.sh && \
-    /tmp/install-sccache.sh && \
+    TARGETOS=${TARGETOS} /tmp/install-sccache.sh && \
     rm /tmp/install-sccache.sh
 
 WORKDIR /workspace
