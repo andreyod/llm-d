@@ -31,23 +31,37 @@ git -C /opt/vllm-source fetch --depth=1 origin "${VLLM_COMMIT_SHA}" || true
 git -C /opt/vllm-source checkout -q "${VLLM_COMMIT_SHA}"
 
 # detect if prebuilt wheel exists (using VLLM_PRECOMPILED_WHEEL_COMMIT for lookup)
-WHEEL_URL=$(pip install \
-  --no-cache-dir \
-  --no-index \
-  --no-deps \
-  --find-links "https://wheels.vllm.ai/${VLLM_PRECOMPILED_WHEEL_COMMIT}/vllm/" \
-  --only-binary=:all: \
-  --pre vllm \
-  --dry-run \
-  --disable-pip-version-check \
-  -qqq \
-  --report - \
-  2>/dev/null | jq -r '.install[0].download_info.url')
+# note: vllm wheel index structure isn't pip-compatible, so we scrape the HTML directly
+echo "DEBUG: Looking for wheel at: https://wheels.vllm.ai/${VLLM_PRECOMPILED_WHEEL_COMMIT}/vllm/"
+echo "DEBUG: Architecture: $(uname -m), Python: $(python3 --version)"
 
-# workaround: vllm wheel index advertises wheels with +cuXXX but actual files don't have it
-# strip both URL-encoded (%2Bcu129) and plain (+cu129) local version identifiers
-if [ -n "${WHEEL_URL}" ]; then
+# determine platform tag from architecture
+MACHINE=$(uname -m)
+case "${MACHINE}" in
+  x86_64) PLATFORM_TAG="manylinux1_x86_64" ;;
+  aarch64) PLATFORM_TAG="manylinux2014_aarch64" ;;
+  *) echo "unsupported architecture: ${MACHINE}"; exit 1 ;;
+esac
+
+# scrape wheel filename from HTML index
+WHEEL_INDEX_HTML=$(curl -sf "https://wheels.vllm.ai/${VLLM_PRECOMPILED_WHEEL_COMMIT}/vllm/" || echo "")
+if [ -z "${WHEEL_INDEX_HTML}" ]; then
+  echo "DEBUG: Failed to fetch wheel index or index does not exist"
+  WHEEL_FILENAME=""
+else
+  WHEEL_FILENAME=$(echo "${WHEEL_INDEX_HTML}" | grep -oE "vllm-[^\"]+${PLATFORM_TAG}\.whl" | head -1)
+fi
+
+if [ -n "${WHEEL_FILENAME}" ]; then
+  # construct full URL (wheels are in parent directory)
+  # note: actual files don't have +cuXXX suffix despite HTML index showing it
+  WHEEL_URL="https://wheels.vllm.ai/${VLLM_PRECOMPILED_WHEEL_COMMIT}/${WHEEL_FILENAME}"
   WHEEL_URL=$(echo "${WHEEL_URL}" | sed -E 's/%2Bcu[0-9]+//g; s/\+cu[0-9]+//g')
+  echo "DEBUG: Found wheel: ${WHEEL_FILENAME}"
+  echo "DEBUG: Wheel URL: ${WHEEL_URL}"
+else
+  WHEEL_URL=""
+  echo "DEBUG: No wheel found for platform: ${PLATFORM_TAG}"
 fi
 
 if [ "${VLLM_PREBUILT}" = "1" ]; then
