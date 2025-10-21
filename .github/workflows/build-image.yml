@@ -341,7 +341,7 @@ jobs:
 
   aws-build-llm-d:
     needs: [detect-changes]
-    if: false
+    if: ${{ needs.detect-changes.outputs.aws == 'true' }}
     strategy:
       fail-fast: false
     runs-on: vllm-runner
@@ -420,7 +420,7 @@ jobs:
 
   gke-build-llm-d:
     needs: [detect-changes]
-    if: false
+    if: ${{ needs.detect-changes.outputs.gke == 'true' }}
     strategy:
       fail-fast: false
     runs-on: vllm-runner
