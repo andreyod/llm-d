@@ -49,7 +49,7 @@ helmfile apply -n ${NAMESPACE}
 
 #### Gateway Options
 
-To see specify your gateway choice you can use the `-e <gateway option>` flag, ex:
+To specify your gateway choice you can use the `-e <gateway option>` flag, ex:
 
 ```bash
 helmfile apply -e kgateway -n ${NAMESPACE}
