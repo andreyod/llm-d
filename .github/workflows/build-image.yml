@@ -117,7 +117,7 @@ jobs:
           echo "xpu=$(echo $platforms | grep -q xpu && echo true || echo false)" >> $GITHUB_OUTPUT
 
   cuda-build-llm-d:
-    needs: [pre-commit, detect-changes]
+    needs: [detect-changes]
     if: ${{ needs.detect-changes.outputs.cuda == 'true' }}
     strategy:
       fail-fast: false
@@ -340,7 +340,7 @@ jobs:
           fi
 
   aws-build-llm-d:
-    needs: [pre-commit, detect-changes]
+    needs: [detect-changes]
     if: false
     strategy:
       fail-fast: false
@@ -419,7 +419,7 @@ jobs:
           fi
 
   gke-build-llm-d:
-    needs: [pre-commit, detect-changes]
+    needs: [detect-changes]
     if: false
     strategy:
       fail-fast: false
@@ -498,7 +498,7 @@ jobs:
           fi
 
   xpu-build-llm-d:
-    needs: [pre-commit, detect-changes]
+    needs: [detect-changes]
     if: ${{ needs.detect-changes.outputs.xpu == 'true' }}
     strategy:
       fail-fast: false
