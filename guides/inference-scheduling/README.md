@@ -21,13 +21,6 @@ This example out of the box requires 2 GPUs of any supported kind:
 - [Create the `llm-d-hf-token` secret in your target namespace with the key `HF_TOKEN` matching a valid HuggingFace token](../prereq/client-setup/README.md#huggingface-token) to pull models.
 - Have the [Monitoring stack](../../docs/monitoring/README.md) installed on your system.
 
--  Intel GPU Plugin Required (For XPU deployments)
-
-    ```bash
-    # Deploy Intel GPU Device Plugin v0.32.1
-    kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin?ref=v0.32.1'
-
-    ```
 
 ## Installation
 
