@@ -24,6 +24,15 @@ source "$UTILS_SCRIPT"
 MAPPINGS_FILE=$(find_mappings_file "builder-package-mappings.json" "$SCRIPT_DIR")
 DOWNLOAD_ARCH=$(get_download_arch)
 
+# install jq first (required to parse package mappings)
+if [ "$TARGETOS" = "ubuntu" ]; then
+    apt-get update -qq
+    apt-get install -y jq
+elif [ "$TARGETOS" = "rhel" ]; then
+    dnf -q update -y
+    dnf -q install -y jq
+fi
+
 # main installation logic
 if [ "$TARGETOS" = "ubuntu" ]; then
     setup_ubuntu_repos

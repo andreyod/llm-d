@@ -9,7 +9,6 @@
     "procps-ng": "procps",
     "git": "git",
     "curl": "curl",
-    "jq": "jq",
     "gcc": "gcc",
     "cuda-nvcc-${CUDA_MAJOR}-${CUDA_MINOR}": "cuda-nvcc-${CUDA_MAJOR}-${CUDA_MINOR}",
     "libnvshmem3-cuda-${CUDA_MAJOR}-3.4.5-1": "libnvshmem3-cuda-${CUDA_MAJOR}=3.4.5-1",

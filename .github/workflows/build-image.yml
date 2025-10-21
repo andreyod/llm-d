@@ -197,12 +197,9 @@ jobs:
             VLLM_REPO=${{ inputs.vllm_repo || 'https://github.com/vllm-project/vllm.git' }}
             VLLM_COMMIT_SHA=${{ inputs.vllm_commit_sha || 'b8b302cde434df8c9289a2b465406b47ebab1c2d' }}
             VLLM_PRECOMPILED_WHEEL_COMMIT=${{ inputs.vllm_precompiled_wheel_commit || inputs.vllm_commit_sha || '' }}
-          cache-from: >-
-            ${{ matrix.platform == 'linux/arm64' &&
-            format('type=gha,scope=cuda-{0}-arm64', matrix.os) || '' }}
+          cache-from: type=gha,scope=cuda-${{ matrix.os }}-${{ matrix.platform == 'linux/arm64' && 'arm64' || 'amd64' }}
           cache-to: >-
-            ${{ matrix.platform == 'linux/arm64' &&
-            format('type=gha,mode=max,scope=cuda-{0}-arm64', matrix.os) || '' }}
+            type=gha,mode=max,scope=cuda-${{ matrix.os }}-${{ matrix.platform == 'linux/arm64' && 'arm64' || 'amd64' }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: >-
             type=image,name=${{ env.REGISTRY }}/${{ github.repository }}-cuda-dev,

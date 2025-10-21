@@ -25,17 +25,24 @@ source "$UTILS_SCRIPT"
 MAPPINGS_FILE=$(find_mappings_file "runtime-package-mappings.json" "$SCRIPT_DIR")
 DOWNLOAD_ARCH=$(get_download_arch)
 
+# install jq first (required to parse package mappings)
+if [ "$TARGETOS" = "ubuntu" ]; then
+    apt-get update -qq
+    apt-get install -y jq
+elif [ "$TARGETOS" = "rhel" ]; then
+    dnf -q update -y
+    dnf -q install -y jq
+fi
+
 # main installation logic
 if [ "$TARGETOS" = "ubuntu" ]; then
     setup_ubuntu_repos
-    update_system ubuntu
     mapfile -t INSTALL_PKGS < <(load_and_expand_packages ubuntu "$MAPPINGS_FILE")
     install_packages ubuntu "${INSTALL_PKGS[@]}"
     cleanup_packages ubuntu
 
 elif [ "$TARGETOS" = "rhel" ]; then
     setup_rhel_repos "$DOWNLOAD_ARCH"
-    update_system rhel
     mapfile -t INSTALL_PKGS < <(load_and_expand_packages rhel "$MAPPINGS_FILE")
     install_packages rhel "${INSTALL_PKGS[@]}"
     cleanup_packages rhel
