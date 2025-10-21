@@ -44,6 +44,12 @@ WHEEL_URL=$(pip install \
   --report - \
   2>/dev/null | jq -r '.install[0].download_info.url')
 
+# workaround: vllm wheel index advertises wheels with +cuXXX but actual files don't have it
+# strip both URL-encoded (%2Bcu129) and plain (+cu129) local version identifiers
+if [ -n "${WHEEL_URL}" ]; then
+  WHEEL_URL=$(echo "${WHEEL_URL}" | sed -E 's/%2Bcu[0-9]+//g; s/\+cu[0-9]+//g')
+fi
+
 if [ "${VLLM_PREBUILT}" = "1" ]; then
   if [ -z "${WHEEL_URL}" ]; then
     echo "VLLM_PREBUILT set but no platform compatible wheel exists for: https://wheels.vllm.ai/${VLLM_PRECOMPILED_WHEEL_COMMIT}/vllm/"
