@@ -130,6 +130,8 @@ jobs:
           done
 
       - name: Wait for all pods to be ready
+        continue-on-error: true
+        id: wait_pods
         run: |
           kubectl wait pod \
             --for=condition=Ready \
@@ -140,6 +142,7 @@ jobs:
           kubectl get pods -n "${NAMESPACE}"
 
       - name: Check gateway pod is up
+        if: always()
         run: |
           GATEWAY_POD_READY=$(kubectl get pods -n "${NAMESPACE}" | grep "inference-gateway" | awk '{print $2}')
           if [ "${GATEWAY_POD_READY}" = "1/1" ]; then
@@ -149,6 +152,7 @@ jobs:
           fi
 
       - name: Show deployment status
+        if: always()
         run: |
           echo "=== Deployments ==="
           kubectl get deployments -n "${NAMESPACE}"
@@ -179,9 +183,11 @@ jobs:
           echo ""
 
       - name: Sleep to wait for vLLM to be ready to respond to requests
+        if: steps.wait_pods.outcome == 'success'
         run: sleep 360
 
       - name: Verify installation and run inference tests
+        if: steps.wait_pods.outcome == 'success'
         run: |
           cd .github/scripts/e2e
           ./e2e-validate.sh -n "${NAMESPACE}" -v
@@ -192,16 +198,26 @@ jobs:
             mkdir -p pod-logs-pd-xpu
             cd pod-logs-pd-xpu
             echo "Fetching ${NAMESPACE} pods log..."
-            kubectl get pods -n "${NAMESPACE}" -l "llm-d.ai/inferenceServing" -o yaml > ./inference-pods.yaml
-            kubectl logs -n "${NAMESPACE}" -l "llm-d.ai/inferenceServing" | grep -v "waiting for vLLM to be ready" > ./inference-pod-logs.log
-            kubectl describe pod -n "${NAMESPACE}" -l "llm-d.ai/inferenceServing" > ./inference-describe-pod-logs.log
+            kubectl get pods -n "${NAMESPACE}" -l "llm-d.ai/inferenceServing" -o yaml > ./inference-pods.yaml || true
+            kubectl logs -n "${NAMESPACE}" -l "llm-d.ai/inferenceServing" 2>&1 | grep -v "waiting for vLLM to be ready" > ./inference-pod-logs.log || true
+            kubectl describe pod -n "${NAMESPACE}" -l "llm-d.ai/inferenceServing" > ./inference-describe-pod-logs.log || true
+            
+            echo "Collecting logs from all pods..."
             kubectl get pods -n "${NAMESPACE}" --no-headers -o custom-columns=":metadata.name" \
             | xargs -I{} sh -c 'kubectl logs --all-containers=true -n "${NAMESPACE}" {} > "{}.log" 2>&1' || true
+            
             echo "Fetching ${NAMESPACE} pods descriptions..."
             kubectl get pods -n "${NAMESPACE}" --no-headers -o custom-columns=":metadata.name" \
             | xargs -I{} sh -c 'kubectl describe pod -n "${NAMESPACE}" {} > "{}-describe.log" 2>&1' || true
+            
+            echo "Collecting events..."
+            kubectl get events -n "${NAMESPACE}" --sort-by='.lastTimestamp' > events.log 2>&1 || true
+            
             mv ~/pd-xpu-deployment.log . || true
             mv ~/install-deps.log . || true
+            
+            echo "Log collection completed."
+            ls -la
 
       - name: Upload pod logs as artifact
         uses: actions/upload-artifact@v4
