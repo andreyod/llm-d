@@ -461,18 +461,29 @@ jobs:
         run: |
           TAG="sha-$(git rev-parse --short HEAD)"
           PR_TAG="${{ github.event.pull_request.number }}"
+          BRANCH_NAME="${{ github.ref_name }}"
           export DEVICE=xpu
           export DOCKERFILE=Dockerfile.xpu
           export VERSION="${TAG}"
           make image-build
           make image-push
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          if [ -n ${PR_TAG} ]; then
+          
+          # Tag and push PR-specific image
+          if [ -n "${PR_TAG}" ]; then
             export NEW_TAG="pr-${PR_TAG}"
             make image-retag
             make image-push VERSION="pr-${PR_TAG}"
-            echo "pr_tag=pr-${PR_TAG}"  >> $GITHUB_OUTPUT
-          fi;
+            echo "pr_tag=pr-${PR_TAG}" >> $GITHUB_OUTPUT
+          fi
+          
+          # Tag and push branch-specific image (e.g., main)
+          if [ "${BRANCH_NAME}" = "main" ]; then
+            export NEW_TAG="main"
+            make image-retag
+            make image-push VERSION="main"
+            echo "main_tag=main" >> $GITHUB_OUTPUT
+          fi
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
