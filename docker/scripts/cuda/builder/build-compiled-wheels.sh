@@ -6,7 +6,7 @@ set -Eeu
 # Required environment variables:
 # - VIRTUAL_ENV: path to Python virtual environment
 # - CUDA_MAJOR: CUDA major version (e.g., 12)
-# - NVSHMEM_DIR: NVSHMEM installation directory
+# - NVSHMEM_PREFIX: NVSHMEM installation directory
 # - FLASHINFER_VERSION: FlashInfer version tag
 # - DEEPEP_REPO: DeepEP repository URL
 # - DEEPEP_VERSION: DeepEP version tag
@@ -17,10 +17,8 @@ set -Eeu
 # - USE_SCCACHE: whether to use sccache (true/false)
 # - TARGETPLATFORM: Docker buildx platform (e.g., linux/amd64, linux/arm64)
 
-# shellcheck source=/dev/null
-source "${VIRTUAL_ENV}/bin/activate"
-# shellcheck source=/dev/null
-source /usr/local/bin/setup-sccache
+. "${VIRTUAL_ENV}/bin/activate"
+. /usr/local/bin/setup-sccache
 
 # install build tools (cmake from pip provides 3.22+ needed by pplx-kernels)
 uv pip install build cuda-python numpy setuptools-scm ninja cmake
@@ -61,7 +59,7 @@ if [ "${TARGETPLATFORM}" != "linux/arm64" ]; then
     git clone "${PPLX_KERNELS_REPO}" pplx-kernels
     cd pplx-kernels
     git checkout "${PPLX_KERNELS_SHA}"
-    TORCH_CUDA_ARCH_LIST="9.0a;10.0+PTX" NVSHMEM_PREFIX="${NVSHMEM_DIR}" uv build --wheel --out-dir /wheels
+    TORCH_CUDA_ARCH_LIST="9.0a;10.0+PTX" NVSHMEM_PREFIX="${NVSHMEM_PREFIX}" uv build --wheel --out-dir /wheels
     cd ..
     rm -rf pplx-kernels
 else

@@ -9,8 +9,9 @@ set -Eeu
 # - TARGETPLATFORM: platform target (linux/arm64 or linux/amd64)
 # - TARGETOS: OS type (ubuntu or rhel)
 
-# shellcheck source=/dev/null
-source /usr/local/bin/setup-sccache
+cd /tmp
+
+. /usr/local/bin/setup-sccache
 
 # determine architecture and library directory for gdrcopy build
 UUARCH=""

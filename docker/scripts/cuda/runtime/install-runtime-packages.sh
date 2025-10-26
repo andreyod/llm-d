@@ -20,7 +20,7 @@ if [ ! -f "$UTILS_SCRIPT" ]; then
     exit 1
 fi
 # shellcheck source=docker/scripts/cuda/common/package-utils.sh
-source "$UTILS_SCRIPT"
+. "$UTILS_SCRIPT"
 
 DOWNLOAD_ARCH=$(get_download_arch)
 
@@ -36,16 +36,15 @@ fi
 # main installation logic
 if [ "$TARGETOS" = "ubuntu" ]; then
     setup_ubuntu_repos
-    mapfile -t INSTALL_PKGS < <(load_layered_packages ubuntu "runtime-packages.json" "cuda")
+    mapfile -t INSTALL_PKGS < <(load_layered_packages ubuntu "runtime-packages.json")
     install_packages ubuntu "${INSTALL_PKGS[@]}"
     cleanup_packages ubuntu
 
 elif [ "$TARGETOS" = "rhel" ]; then
     setup_rhel_repos "$DOWNLOAD_ARCH"
-    mapfile -t INSTALL_PKGS < <(load_layered_packages rhel "runtime-packages.json" "cuda")
+    mapfile -t INSTALL_PKGS < <(load_layered_packages rhel "runtime-packages.json")
     install_packages rhel "${INSTALL_PKGS[@]}"
     cleanup_packages rhel
-
 else
     echo "ERROR: Unsupported TARGETOS='$TARGETOS'. Must be 'ubuntu' or 'rhel'." >&2
     exit 1

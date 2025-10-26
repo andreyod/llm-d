@@ -12,6 +12,8 @@ ARG BASE_IMAGE_SUFFIX=ubi9
 ARG BUILD_BASE_IMAGE_SUFFIX=${BASE_IMAGE_SUFFIX}
 ARG FINAL_BASE_IMAGE_SUFFIX=${BASE_IMAGE_SUFFIX}
 
+ARG PYTHON_VERSION=3.12
+
 # ============================================================================
 # BUILD STAGE - Install build dependencies and create wheels
 # ============================================================================
@@ -26,9 +28,11 @@ ARG CUDA_PATCH=1
 ARG PYTHON_VERSION
 
 ARG USE_SCCACHE=true
-ARG NVSHMEM_CUDA_ARCHITECTURES="90a;100"
+ARG NVSHMEM_VERSION="v3.4.5-0"
 
 WORKDIR /workspace
+
+RUN mkdir -p /wheels
 
 # Create UV constraint files
 COPY docker/build-constraints.txt /tmp/build-constraints.txt
@@ -40,20 +44,29 @@ ENV LANG=C.UTF-8 \
     UV_INDEX_STRATEGY=unsafe-best-match \
     UV_LINK_MODE=copy \
     TORCH_CUDA_ARCH_LIST="9.0a;10.0+PTX" \
-    PYTHON_VERSION=${PYTHON_VERSION:-3.12} \
+    PYTHON_VERSION=${PYTHON_VERSION} \
     UV_TORCH_BACKEND=${UV_TORCH_BACKEND:-cu${CUDA_MAJOR}${CUDA_MINOR}} \
     UV_BUILD_CONSTRAINT=/tmp/build-constraints.txt \
     UV_CONSTRAINT=/tmp/constraints.txt \
-    VIRTUAL_ENV=/opt/vllm
+    VIRTUAL_ENV=/opt/vllm \
+    CUDA_HOME="/usr/local/cuda"
 
 # Install base packages and EPEL in single layer
 COPY docker/scripts/cuda/common/package-utils.sh /tmp/package-utils.sh
 COPY docker/packages /tmp/packages
 COPY docker/scripts/cuda/builder/install-base-packages.sh /tmp/install-base-packages.sh
-RUN chmod +x /tmp/install-base-packages.sh && \
+RUN --mount=type=secret,id=subman_org \
+    --mount=type=secret,id=subman_activation_key \
+    chmod +x /tmp/install-base-packages.sh && \
     TARGETOS=${TARGETOS} /tmp/install-base-packages.sh && \
     rm /tmp/install-base-packages.sh /tmp/package-utils.sh && \
     rm -rf /tmp/packages
+
+COPY docker/scripts/cuda/builder/install-cmake.sh /tmp/install-cmake.sh
+ARG CMAKE_VERSION="3.19.3"
+RUN --mount=type=cache,target=/var/cache/git \
+    /tmp/install-cmake.sh \
+    rm /tmp/install-cmake.sh
 
 # Install sccache (after base packages which include curl and openssl-devel)
 COPY docker/scripts/common/setup-sccache.sh /usr/local/bin/setup-sccache
@@ -70,18 +83,23 @@ RUN export UV_INSTALL_DIR=/usr/local/bin && \
     uv venv /opt/vllm --python ${PYTHON_VERSION} && \
     uv pip install --no-cache -U wheel meson-python ninja pybind11 build
 
-ENV PATH="${VIRTUAL_ENV}/bin:${PATH}" \
-    LIBRARY_PATH="/usr/local/cuda/lib64:/usr/local/lib:/usr/local/lib64" \
-    CPATH="/usr/include:/usr/local/include:/usr/local/cuda/include" \
-    PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/lib64/pkgconfig"
+ENV NVSHMEM_PREFIX="/opt/nvshmem-${NVSHMEM_VERSION}" \
+    EFA_PREFIX="/opt/amazon/efa" \
+    UCX_PREFIX="/opt/ucx" \
+    PATH="${NVSHMEM_PREFIX}/bin:${VIRTUAL_ENV}/bin:${PATH}" \
+    LIBRARY_PATH="${NVSHMEM_PREFIX}/lib:${NVSHMEM_PREFIX}/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/lib64" \
+    CPATH="${NVSHMEM_PREFIX}/include:/usr/include:/usr/local/include:/usr/local/cuda/include:${CPATH}" \
+    PKG_CONFIG_PATH="${UCX_PREFIX}/lib/pkgconfig:${EFA_PREFIX}/lib64/pkgconfig:${EFA_PREFIX}/lib/pkgconfig:\
+/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig:\
+/usr/lib64/pkgconfig:/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig:${PKG_CONFIG_PATH}"
 
-# NVSHMEM installed from nvidia repos via libnvshmem3-cuda-${CUDA_MAJOR}-3.4.5-1
-# Libraries on RHEL: /usr/lib64/nvshmem/${CUDA_MAJOR}/, on Ubuntu: /usr/lib/{arch}-linux-gnu/nvshmem/${CUDA_MAJOR}/
-# Headers: /usr/include/nvshmem_${CUDA_MAJOR}/
-ENV NVSHMEM_DIR="/usr/bin/nvshmem_${CUDA_MAJOR}" \
-    PATH="/usr/bin/nvshmem_${CUDA_MAJOR}:${PATH}" \
-    CPATH="/usr/include/nvshmem_${CUDA_MAJOR}:${CPATH}" \
-    LIBRARY_PATH="/usr/lib64/nvshmem/${CUDA_MAJOR}:/usr/lib/x86_64-linux-gnu/nvshmem/${CUDA_MAJOR}:/usr/lib/aarch64-linux-gnu/nvshmem/${CUDA_MAJOR}:${LIBRARY_PATH}"
+# Install EFA
+COPY docker/scripts/cuda/common/package-utils.sh /tmp/package-utils.sh
+COPY docker/scripts/cuda/builder/install-efa.sh /tmp/install-efa.sh
+RUN --mount=type=secret,id=subman_org \
+    --mount=type=secret,id=subman_activation_key \
+    TARGETOS=${TARGETOS} /tmp/install-efa.sh \
+    rm /tmp/install-efa.sh /tmp/package-utils.sh
 
 # Build and install gdrcopy
 COPY docker/scripts/cuda/builder/build-gdrcopy.sh /tmp/build-gdrcopy.sh
@@ -91,6 +109,30 @@ RUN --mount=type=cache,target=/var/cache/git \
     chmod +x /tmp/build-gdrcopy.sh && \
     TARGETPLATFORM=${TARGETPLATFORM} TARGETOS=${TARGETOS} /tmp/build-gdrcopy.sh && \
     rm /tmp/build-gdrcopy.sh
+
+# Build UCX
+ARG UCX_REPO="https://github.com/openucx/ucx.git"
+ARG UCX_VERSION="7ec95b95e524a87e81cac92f5ca8523e3966b16b"
+COPY docker/scripts/cuda/builder/build-ucx.sh /tmp/build-ucx.sh
+RUN --mount=type=cache,target=/var/cache/git \
+    --mount=type=secret,id=aws_access_key_id \
+    --mount=type=secret,id=aws_secret_access_key \
+    /tmp/build-ucx.sh \
+    rm /tmp/build-ucx.sh
+
+# Build NVSHMEM
+ARG NVSHMEM_USE_GIT="true"
+ARG NVSHMEM_REPO="https://github.com/NVIDIA/nvshmem.git"
+# defined above when setting up paths
+ARG NVSHMEM_VERSION
+ARG NVSHMEM_CUDA_ARCHITECTURES="90a;100"
+COPY docker/scripts/cuda/builder/build-nvshmem.sh /tmp/build-nvshmem.sh
+COPY docker/scripts/cuda/builder/install-cmake.sh /tmp/install-cmake.sh
+RUN --mount=type=cache,target=/var/cache/git \
+    --mount=type=secret,id=aws_access_key_id \
+    --mount=type=secret,id=aws_secret_access_key \
+    VIRTUAL_ENV=${VIRTUAL_ENV} /tmp/build-nvshmem.sh \
+    rm /tmp/build-nvshmem.sh
 
 # Determine NVSHMEM library path based on OS and architecture, and create symlinks
 RUN if [ "${TARGETOS:-rhel}" = "ubuntu" ]; then \
@@ -111,8 +153,16 @@ RUN if [ "${TARGETOS:-rhel}" = "ubuntu" ]; then \
 ENV CPPFLAGS="-I/usr/include/nvshmem_${CUDA_MAJOR} ${CPPFLAGS}" \
     LDFLAGS="-L/usr/lib64/nvshmem/${CUDA_MAJOR} -L/usr/lib/x86_64-linux-gnu/nvshmem/${CUDA_MAJOR} -L/usr/lib/aarch64-linux-gnu/nvshmem/${CUDA_MAJOR} ${LDFLAGS}"
 
-# Create wheels directory
-RUN mkdir -p /wheels
+# Decide to build NIXL from source. If set to false, NIXL will be installed as a dependency of vLLM in the `install-vllm.sh` script, and the `build-nixl.sh` script will be a NoOp.
+ARG BUILD_NIXL_FROM_SOURCE="true"
+ARG NIXL_REPO="https://github.com/ai-dynamo/nixl.git"
+ARG NIXL_VERSION="f62d1d7d6bf3353924680e4e2c8b2ac1a2f69d0d"
+COPY docker/scripts/cuda/builder/build-nixl.sh /tmp/build-nixl.sh
+RUN --mount=type=cache,target=/var/cache/git \
+    --mount=type=secret,id=aws_access_key_id \
+    --mount=type=secret,id=aws_secret_access_key \
+    /tmp/build-nixl.sh \
+    rm /tmp/build-nixl.sh
 
 # Pin torch, so all deps are built against the same version
 # as vllm itself
@@ -189,6 +239,8 @@ ARG CUDA_MAJOR=12
 ARG CUDA_MINOR=9
 ARG CUDA_PATCH=1
 ARG PYTHON_VERSION
+ARG NVSHMEM_VERSION="v3.4.5-0"
+ARG BUILD_NIXL_FROM_SOURCE="true"
 
 COPY docker/constraints.txt /tmp/constraints.txt
 
@@ -198,11 +250,11 @@ ENV LANG=C.UTF-8 \
     UV_TORCH_BACKEND=${UV_TORCH_BACKEND:-cu${CUDA_MAJOR}${CUDA_MINOR}} \
     UV_CONSTRAINT=/tmp/constraints.txt \
     VIRTUAL_ENV=/opt/vllm \
-    NVSHMEM_DIR="/usr/bin/nvshmem_${CUDA_MAJOR}" \
+    NVSHMEM_PREFIX="/opt/nvshmem-${NVSHMEM_VERSION}" \
     # LD_LIBRARY_PATH needs the torch path to apply proper linkers so as not to produce torch ABI missmatch
     LD_LIBRARY_PATH="/opt/vllm/lib64/python${PYTHON_VERSION}/site-packages/torch/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/lib64:/usr/lib64/nvshmem/${CUDA_MAJOR}:/usr/lib/x86_64-linux-gnu/nvshmem/${CUDA_MAJOR}:/usr/lib/aarch64-linux-gnu/nvshmem/${CUDA_MAJOR}:${LD_LIBRARY_PATH}" \
-    PATH="/usr/bin/nvshmem_${CUDA_MAJOR}:${PATH}" \
-    CPATH="/usr/include/nvshmem_${CUDA_MAJOR}:${CPATH}" \
+    PATH="${NVSHMEM_PREFIX}/bin:${PATH}" \
+    CPATH="${NVSHMEM_PREFIX}/include:${CPATH}" \
     TORCH_CUDA_ARCH_LIST="9.0a;10.0+PTX"
 
 # Install runtime dependencies
@@ -213,6 +265,8 @@ RUN chmod +x /tmp/install-runtime-packages.sh && \
     TARGETOS=${TARGETOS} /tmp/install-runtime-packages.sh && \
     rm /tmp/install-runtime-packages.sh /tmp/package-utils.sh && \
     rm -rf /tmp/packages
+
+COPY --from=builder /opt/amazon/efa /opt/amazon/efa/
 
 # Copy gdrcopy libraries from builder
 # Install to /usr/local/lib (always present) and multiarch lib dir
@@ -242,11 +296,23 @@ RUN if [ -d /tmp/gdrcopy_libs ]; then \
         rm -rf /tmp/gdrcopy_libs; \
     fi
 
-# NVSHMEM now installed from nvidia repos (no need to copy from builder)
+# Copy compiled NVSHMEM libraries from builder
+COPY --from=builder /opt/nvshmem-${NVSHMEM_VERSION}/ /opt/nvshmem-${NVSHMEM_VERSION}/
+
+# Copy UCX libraries from builder
+COPY --from=builder /usr/local/lib/libucp* /usr/local/lib/
+COPY --from=builder /usr/local/lib/libucs* /usr/local/lib/
+COPY --from=builder /usr/local/lib/libuct* /usr/local/lib/
+COPY --from=builder /usr/local/lib/libucm* /usr/local/lib/
+COPY --from=builder /usr/local/lib/ucx/ /usr/local/lib/ucx/
+
+# need to deal with this one with pathing between ubuntu and rhel
+COPY --from=builder /usr/local/lib64/libucx_utils.so /usr/local/lib64/ 
 
 # Setup ldconfig and library paths
 RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
     echo "/usr/local/lib64" >> /etc/ld.so.conf.d/local.conf && \
+    echo "/opt/nvshmem-${NVSHMEM_VERSION}/lib" >> /etc/ld.so.conf.d/local.conf && \
     ldconfig
 
 # Install uv and setup Python virtual environment
@@ -343,7 +409,8 @@ ENV PATH="${VIRTUAL_ENV}/bin:/usr/local/nvidia/bin:${PATH}" \
     TORCH_NCCL_DUMP_ON_TIMEOUT=0 \
     VLLM_SKIP_P2P_CHECK=1 \
     VLLM_CACHE_ROOT=/tmp/vllm \
-    UCX_MEM_MMAP_HOOK_MODE=none
+    UCX_MEM_MMAP_HOOK_MODE=none \
+    NVSHMEM_DISABLE_CUDA_VMM=1
 
 USER 2000
 WORKDIR /home/vllm

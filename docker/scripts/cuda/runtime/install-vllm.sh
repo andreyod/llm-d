@@ -9,20 +9,28 @@ set -Eeu
 # - VLLM_PREBUILT: whether to use prebuilt wheel (1/0)
 # - VLLM_USE_PRECOMPILED: whether to use precompiled binaries (1/0)
 # - VLLM_PRECOMPILED_WHEEL_COMMIT: commit SHA for precompiled wheel lookup (defaults to VLLM_COMMIT_SHA)
+# - BUILD_NIXL_FROM_SOURCE: if nixl should be installed by vLLM or has been built from source in the builder stages
 
-# shellcheck source=/dev/null
-source /opt/vllm/bin/activate
+. /opt/vllm/bin/activate
 
 # default VLLM_PRECOMPILED_WHEEL_COMMIT to VLLM_COMMIT_SHA if not set
 VLLM_PRECOMPILED_WHEEL_COMMIT="${VLLM_PRECOMPILED_WHEEL_COMMIT:-${VLLM_COMMIT_SHA}}"
 
 # build list of packages to install
-INSTALL_PACKAGES=(
-  nixl
-  cuda-python
-  'huggingface_hub[hf_xet]'
-  /tmp/wheels/*.whl
-)
+if [ "${BUILD_NIXL_FROM_SOURCE}" = "true" ]; then
+  INSTALL_PACKAGES=(
+    cuda-python
+    'huggingface_hub[hf_xet]'
+    /tmp/wheels/*.whl
+  )
+else
+  INSTALL_PACKAGES=(
+    nixl
+    cuda-python
+    'huggingface_hub[hf_xet]'
+    /tmp/wheels/*.whl
+  )
+fi
 
 # clone vllm repository
 git clone "${VLLM_REPO}" /opt/vllm-source

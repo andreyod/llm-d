@@ -5,6 +5,30 @@
 # - CUDA_MAJOR: CUDA major version (e.g., 12)
 # - CUDA_MINOR: CUDA minor version (e.g., 9)
 # - PYTHON_VERSION: Python version (e.g., 3.12)
+# Optional docker secret mounts:
+# - /run/secrets/subman_org: Subscription Manager Organization - used if on a ubi based image for entitlement
+# - /run/secrets/subman_activation_key: Subscription Manager Activation key - used if on a ubi based image for entitlement
+
+# Assumes rhel check in consuming script
+ensure_registered() {
+  if [ ! -f /etc/pki/consumer/cert.pem ]; then
+    if [ -f /run/secrets/subman_org ] && [ -f /run/secrets/subman_activation_key ]; then
+        subscription-manager register \
+        --org "$(cat /run/secrets/subman_org)" \
+        --activationkey "$(cat /run/secrets/subman_activation_key)" \
+        --force
+    fi
+  fi
+}
+
+# Assumes rhel check in consuming script
+ensure_unregistered() {
+  if [ -f /etc/pki/consumer/cert.pem ]; then
+    subscription-manager unregister || true
+  fi
+  subscription-manager clean || true
+  rm -rf /etc/pki/entitlement/* /etc/pki/consumer/* /etc/rhsm/* /var/cache/dnf/* || true
+}
 
 # detect architecture for repo URLs
 get_download_arch() {
@@ -177,6 +201,7 @@ merge_package_manifests() {
 # package_type: "builder-packages.json" or "runtime-packages.json"
 # accelerator: "cuda", "xpu", "hpu", etc.
 # returns: package names (one per line) for the target os
+# if no accelerator is passed only the common manifests will be used
 load_layered_packages() {
     local os="$1"
     local package_type="$2"
