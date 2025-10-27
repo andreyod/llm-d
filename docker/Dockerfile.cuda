@@ -99,7 +99,7 @@ COPY docker/scripts/cuda/common/package-utils.sh /tmp/package-utils.sh
 COPY docker/scripts/cuda/builder/install-efa.sh /tmp/install-efa.sh
 RUN --mount=type=secret,id=subman_org \
     --mount=type=secret,id=subman_activation_key \
-    TARGETOS=${TARGETOS} /tmp/install-efa.sh \
+    TARGETPLATFORM=${TARGETPLATFORM} TARGETOS=${TARGETOS} /tmp/install-efa.sh \
     rm /tmp/install-efa.sh /tmp/package-utils.sh
 
 # Build and install gdrcopy

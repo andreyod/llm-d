@@ -13,7 +13,6 @@ set -Eeu
 # - VIRTUAL_ENV: Path to the virtual environment
 # - USE_SCCACHE: whether to use sccache (true/false)
 # - TARGETOS: OS type (ubuntu or rhel)
-# - TARGETPLATFORM: Docker buildx platform (e.g., linux/amd64, linux/arm64)
 
 if [ "${BUILD_NIXL_FROM_SOURCE}" = "false" ]; then
     echo "NIXL will be installed be vLLM and not built from source."
