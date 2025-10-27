@@ -39,8 +39,9 @@ fi
 
 ./autogen.sh 
 ./contrib/configure-release \
-    --libdir="${UCX_PREFIX}/lib" \
     --prefix="${UCX_PREFIX}" \
+    --libdir="${UCX_PREFIX}/lib" \
+    "${EFA_SUPPORT_FLAG}" \
     --enable-shared \
     --disable-static \
     --disable-doxygen-doc \
@@ -50,9 +51,7 @@ fi
     --with-verbs \
     --with-dm \
     --with-gdrcopy=/usr/local \
-    --enable-mt \
-    "${EFA_SUPPORT_FLAG}" \
-    --prefix=/usr/local 
+    --enable-mt
 
 make -j$(nproc) 
 make install-strip 
@@ -65,6 +64,4 @@ if [ "${USE_SCCACHE}" = "true" ]; then
     sccache --show-stats
 fi
 
-# Make UCX Discoverable for NVSHMEM
-echo "${UCX_PREFIX}/lib" > /etc/ld.so.conf.d/ucx.conf && ldconfig && \
-ln -sf "${UCX_PREFIX}/lib/pkgconfig" /usr/local/lib/pkgconfig/ucx || true
+echo "${UCX_PREFIX}/lib" > /etc/ld.so.conf.d/ucx.conf && ldconfig

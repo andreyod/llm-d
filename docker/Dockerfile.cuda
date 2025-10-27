@@ -307,7 +307,7 @@ COPY --from=builder /usr/local/lib/libucm* /usr/local/lib/
 COPY --from=builder /usr/local/lib/ucx/ /usr/local/lib/ucx/
 
 # need to deal with this one with pathing between ubuntu and rhel
-COPY --from=builder /usr/local/lib64/libucx_utils.so /usr/local/lib64/ 
+COPY --from=builder /opt/ucx/lib*/libucx*.so* /usr/local/lib/
 
 # Setup ldconfig and library paths
 RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
