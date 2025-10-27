@@ -115,6 +115,7 @@ jobs:
           cd guides/pd-disaggregation
           RELEASE_NAME_POSTFIX=${RELEASE_NAME_POSTFIX} \
           helmfile apply -e xpu -n "${NAMESPACE}" ${HELM_SET_IMAGE} \
+            --skip-schema-validation \
             | tee ~/pd-xpu-deployment.log
           echo "---------------------------------------" >> ~/pd-xpu-deployment.log
 

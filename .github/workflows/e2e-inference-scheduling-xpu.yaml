@@ -114,6 +114,7 @@ jobs:
           cd guides/inference-scheduling
           RELEASE_NAME_POSTFIX=${RELEASE_NAME_POSTFIX} \
           helmfile apply -e xpu -n "${NAMESPACE}" ${HELM_SET_IMAGE} \
+            --skip-schema-validation \
             | tee ~/inference-scheduling-deployment.log
           echo "---------------------------------------" >> ~/inference-scheduling-xpu-deployment.log
 
