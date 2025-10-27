@@ -41,6 +41,7 @@ elif [ -d "${EFA_PREFIX}/lib" ]; then
   EFA_LIBDIR="${EFA_PREFIX}/lib"
 fi
 
+# pass flag explicitly if targeting rhel
 LIBFABRIC_PATH_FLAG=""
 if [ "${TARGETOS}" = "rhel" ] && [ -n "${EFA_LIBDIR}" ]; then
     LIBFABRIC_PATH_FLAG="-Dlibfabric_path=${EFA_LIBDIR}"

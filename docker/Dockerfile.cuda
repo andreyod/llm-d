@@ -154,17 +154,6 @@ RUN if [ "${TARGETOS:-rhel}" = "ubuntu" ]; then \
 ENV CPPFLAGS="-I/usr/include/nvshmem_${CUDA_MAJOR} ${CPPFLAGS}" \
     LDFLAGS="-L/usr/lib64/nvshmem/${CUDA_MAJOR} -L/usr/lib/x86_64-linux-gnu/nvshmem/${CUDA_MAJOR} -L/usr/lib/aarch64-linux-gnu/nvshmem/${CUDA_MAJOR} ${LDFLAGS}"
 
-# Decide to build NIXL from source. If set to false, NIXL will be installed as a dependency of vLLM in the `install-vllm.sh` script, and the `build-nixl.sh` script will be a NoOp.
-ARG BUILD_NIXL_FROM_SOURCE="true"
-ARG NIXL_REPO="https://github.com/ai-dynamo/nixl.git"
-ARG NIXL_VERSION="f62d1d7d6bf3353924680e4e2c8b2ac1a2f69d0d"
-COPY docker/scripts/cuda/builder/build-nixl.sh /tmp/build-nixl.sh
-RUN --mount=type=cache,target=/var/cache/git \
-    --mount=type=secret,id=aws_access_key_id \
-    --mount=type=secret,id=aws_secret_access_key \
-    /tmp/build-nixl.sh \
-    rm /tmp/build-nixl.sh
-
 # Pin torch, so all deps are built against the same version
 # as vllm itself
 # hadolint ignore=SC1091
@@ -177,6 +166,17 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     types-PyYAML \
     pytest \
     patchelf>=0.11.0
+
+# Decide to build NIXL from source. If set to false, NIXL will be installed as a dependency of vLLM in the `install-vllm.sh` script, and the `build-nixl.sh` script will be a NoOp.
+ARG BUILD_NIXL_FROM_SOURCE="true"
+ARG NIXL_REPO="https://github.com/ai-dynamo/nixl.git"
+ARG NIXL_VERSION="f62d1d7d6bf3353924680e4e2c8b2ac1a2f69d0d"
+COPY docker/scripts/cuda/builder/build-nixl.sh /tmp/build-nixl.sh
+RUN --mount=type=cache,target=/var/cache/git \
+    --mount=type=secret,id=aws_access_key_id \
+    --mount=type=secret,id=aws_secret_access_key \
+    /tmp/build-nixl.sh \
+    rm /tmp/build-nixl.sh
 
 RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
     echo "/usr/local/lib64" >> /etc/ld.so.conf.d/local.conf && \
