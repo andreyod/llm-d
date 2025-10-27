@@ -42,6 +42,8 @@
   },
   "ubuntu_only": [
     "debhelper",
-    "libnuma-dev"
+    "libnuma-dev",
+    "environment-modules",
+    "tcl"
   ]
 }

@@ -65,6 +65,12 @@ fi
 mkdir build
 cd build
 
+    # -DCMAKE_PREFIX_PATH="${EFA_PREFIX};${UCX_PREFIX}" \
+    # -DCMAKE_INCLUDE_PATH="${EFA_PREFIX}/include;${UCX_PREFIX}/include" \
+    # -DCMAKE_LIBRARY_PATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
+    # -DCMAKE_INSTALL_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
+    # -DCMAKE_BUILD_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
+
 cmake \
     -G Ninja \
     -DNVSHMEM_PREFIX="${NVSHMEM_PREFIX}" \
@@ -85,11 +91,6 @@ cmake \
     -DGDRCOPY_HOME=/usr/local \
     -DNVSHMEM_LIBFABRIC_SUPPORT=1 \
     -DLIBFABRIC_HOME="${EFA_PREFIX}" \
-    -DCMAKE_PREFIX_PATH="${EFA_PREFIX};${UCX_PREFIX}" \
-    -DCMAKE_INCLUDE_PATH="${EFA_PREFIX}/include;${UCX_PREFIX}/include" \
-    -DCMAKE_LIBRARY_PATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
-    -DCMAKE_INSTALL_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
-    -DCMAKE_BUILD_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
     ..
 
 ninja -j"$(nproc)"
