@@ -37,12 +37,10 @@ if [ "${TARGETOS}" = "rhel" ]; then
     ensure_registered
 fi
 
-mkdir -p /tmp/efa
-cd /tmp/efa
+mkdir -p /tmp/efa && cd /tmp/efa
 curl -O https://efa-installer.amazonaws.com/aws-efa-installer-1.43.3.tar.gz
 tar -xf aws-efa-installer-1.43.3.tar.gz && cd aws-efa-installer
-# ./efa_installer.sh --skip-kmod --skip-plugin --skip-limit-conf -d --no-verify -y
-./efa_installer.sh --skip-plugin --skip-limit-conf -d --no-verify -y
+./efa_installer.sh --skip-kmod --skip-plugin --skip-limit-conf -d --no-verify -y
 mkdir -p /etc/ld.so.conf.d/
 ldconfig
 cd /tmp
