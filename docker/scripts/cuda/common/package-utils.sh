@@ -11,18 +11,10 @@
 
 # Assumes rhel check in consuming script
 ensure_registered() {
-  echo "beginning registration process"
-  # Be strict in your script, but keep register robust
   set -euo pipefail
   set -x
-
-  # Ensure directories exist even after a previous cleanup
   install -d -m0755 /etc/pki/consumer /etc/pki/entitlement /etc/rhsm
-
-  # Clear partial/subman state to avoid python-rhsm loading a stale/nonexistent cert
   subscription-manager clean || true
-
-  # Only register if not already registered
   if [ ! -f /etc/pki/consumer/cert.pem ]; then
     test -f /run/secrets/subman_org && test -f /run/secrets/subman_activation_key
     subscription-manager register \
@@ -33,19 +25,6 @@ ensure_registered() {
   fi
   set +x
 }
-# ensure_registered() {
-#   echo "beginning registration process"
-#   set -x
-#   if [ ! -f /etc/pki/consumer/cert.pem ]; then
-#     if [ -f /run/secrets/subman_org ] && [ -f /run/secrets/subman_activation_key ]; then
-#         subscription-manager register \
-#         --org "$(cat /run/secrets/subman_org)" \
-#         --activationkey "$(cat /run/secrets/subman_activation_key)" \
-#         --force
-#     fi
-#   fi
-#   set +x
-# }
 
 # Assumes rhel check in consuming script
 ensure_unregistered() {
