@@ -36,13 +36,13 @@ fi
 # main installation logic
 if [ "$TARGETOS" = "ubuntu" ]; then
     setup_ubuntu_repos
-    mapfile -t INSTALL_PKGS < <(load_layered_packages ubuntu "runtime-packages.json")
+    mapfile -t INSTALL_PKGS < <(load_layered_packages ubuntu "runtime-packages.json" "cuda")
     install_packages ubuntu "${INSTALL_PKGS[@]}"
     cleanup_packages ubuntu
 
 elif [ "$TARGETOS" = "rhel" ]; then
     setup_rhel_repos "$DOWNLOAD_ARCH"
-    mapfile -t INSTALL_PKGS < <(load_layered_packages rhel "runtime-packages.json")
+    mapfile -t INSTALL_PKGS < <(load_layered_packages rhel "runtime-packages.json" "cuda")
     install_packages rhel "${INSTALL_PKGS[@]}"
     cleanup_packages rhel
 else
