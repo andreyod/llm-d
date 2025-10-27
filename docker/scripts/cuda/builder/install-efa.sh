@@ -48,9 +48,9 @@ rm -rf /tmp/efa
 # - TARGETOS: Target OS - either 'ubuntu' or 'rhel' (default: rhel)
 
 if [ "$TARGETOS" = "ubuntu" ]; then
-    apt-get clean
+    cleanup_packages ubuntu
 elif [ "$TARGETOS" = "rhel" ]; then
-    dnf clean all
+    cleanup_packages rhel
     ensure_unregistered
 else
     echo "ERROR: Unsupported TARGETOS='$TARGETOS'. Must be 'ubuntu' or 'rhel'." >&2

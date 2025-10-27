@@ -13,6 +13,7 @@ set -Eeu
 # - VIRTUAL_ENV: Path to the virtual environment
 # - USE_SCCACHE: whether to use sccache (true/false)
 # - TARGETOS: OS type (ubuntu or rhel)
+# - TARGETPLATFORM: Docker buildx platform (e.g., linux/amd64, linux/arm64)
 
 if [ "${BUILD_NIXL_FROM_SOURCE}" = "false" ]; then
     echo "NIXL will be installed be vLLM and not built from source."
@@ -33,10 +34,16 @@ if [ "${USE_SCCACHE}" = "true" ]; then
     export CC="sccache gcc" CXX="sccache g++" NVCC="sccache nvcc"
 fi
 
-LIBFABRIC_PATH_FLAG=""
+EFA_LIBDIR=""
+if [ -d "${EFA_PREFIX}/lib64" ]; then
+  EFA_LIBDIR="${EFA_PREFIX}/lib64"
+elif [ -d "${EFA_PREFIX}/lib" ]; then
+  EFA_LIBDIR="${EFA_PREFIX}/lib"
+fi
 
-if [ "${TARGETOS}" = "rhel" ]; then
-    LIBFABRIC_PATH_FLAG="-Dlibfabric_path=${EFA_PREFIX}"
+LIBFABRIC_PATH_FLAG=""
+if [ "${TARGETOS}" = "rhel" ] && [ -n "${EFA_LIBDIR}" ]; then
+    LIBFABRIC_PATH_FLAG="-Dlibfabric_path=${EFA_LIBDIR}"
 fi
 
 meson setup build \
@@ -50,9 +57,8 @@ cd build
 ninja
 ninja install
 cd ..
-. ${VIRTUAL_ENV}/bin/activate && \
-python -m build --no-isolation --wheel -o /wheels && \
-uv pip install --no-cache-dir . && \
+. ${VIRTUAL_ENV}/bin/activate
+python -m build --no-isolation --wheel -o /wheels
 rm -rf build
 
 cd /tmp && rm -rf /tmp/nixl 
