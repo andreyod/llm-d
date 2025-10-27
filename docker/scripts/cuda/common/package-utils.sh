@@ -84,7 +84,7 @@ setup_ubuntu_repos() {
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
     apt-get install -y software-properties-common
-    add-apt-repository universe
+    add-apt-repository -y universe
     apt-get update -qq
 }
 
