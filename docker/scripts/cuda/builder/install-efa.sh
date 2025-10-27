@@ -23,11 +23,16 @@ if [ ! -f "$UTILS_SCRIPT" ]; then
 fi
 . "$UTILS_SCRIPT"
 
+if [ "$TARGETOS" = "ubuntu" ]; then
+    # efa uses apt instead of apt-get
+    apt update -y
+fi
+
 mkdir -p /tmp/efa && cd /tmp/efa
 curl -O https://efa-installer.amazonaws.com/aws-efa-installer-1.43.3.tar.gz
 tar -xf aws-efa-installer-1.43.3.tar.gz && cd aws-efa-installer
-# ./efa_installer.sh --skip-kmod --no-verify -y
-./efa_installer.sh --skip-kmod --skip-plugin --skip-limit-conf --no-verify -y
+./efa_installer.sh --skip-kmod --no-verify -y
+# ./efa_installer.sh --skip-kmod --skip-plugin --skip-limit-conf --no-verify -y
 mkdir -p /etc/ld.so.conf.d/
 ldconfig
 cd /tmp
