@@ -45,12 +45,12 @@ meson setup build \
     -Ducx_path=${UCX_PREFIX} \
     ${LIBFABRIC_PATH_FLAG} \
     -Dinstall_headers=true
-cd build && \
-ninja && \
-ninja install && \
-cd .. && \
-# Build nixl wheel and install locally
-source ${VIRTUAL_ENV}/bin/activate && \
+
+cd build
+ninja
+ninja install
+cd ..
+. ${VIRTUAL_ENV}/bin/activate && \
 python -m build --no-isolation --wheel -o /wheels && \
 uv pip install --no-cache-dir . && \
 rm -rf build

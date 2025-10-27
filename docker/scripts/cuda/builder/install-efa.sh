@@ -51,7 +51,8 @@ if [ "$TARGETOS" = "ubuntu" ]; then
     apt-get clean
 elif [ "$TARGETOS" = "rhel" ]; then
     dnf clean all
-    ensure_unregistered
+    # # Keep registered - cleaning in next stage
+    # ensure_unregistered
 else
     echo "ERROR: Unsupported TARGETOS='$TARGETOS'. Must be 'ubuntu' or 'rhel'." >&2
     exit 1

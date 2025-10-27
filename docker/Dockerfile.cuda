@@ -305,7 +305,7 @@ COPY --from=builder /usr/local/lib/libucp* /usr/local/lib/
 COPY --from=builder /usr/local/lib/libucs* /usr/local/lib/
 COPY --from=builder /usr/local/lib/libuct* /usr/local/lib/
 COPY --from=builder /usr/local/lib/libucm* /usr/local/lib/
-COPY --from=builder /usr/local/lib/ucx/ /usr/local/lib/ucx/
+COPY --from=builder /opt/ucx/lib /usr/local/lib/ucx/
 
 # need to deal with this one with pathing between ubuntu and rhel
 COPY --from=builder /opt/ucx/lib*/libucx*.so* /usr/local/lib/
