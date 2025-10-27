@@ -49,7 +49,7 @@ ENV LANG=C.UTF-8 \
     UV_BUILD_CONSTRAINT=/tmp/build-constraints.txt \
     UV_CONSTRAINT=/tmp/constraints.txt \
     VIRTUAL_ENV=/opt/vllm \
-    CUDA_HOME="/usr/local/cuda"
+    CUDA_HOME="/usr/local/cuda-${CUDA_MAJOR}.${CUDA_MINOR}"
 
 # Install base packages and EPEL in single layer
 COPY docker/scripts/cuda/common/package-utils.sh /tmp/package-utils.sh
@@ -103,11 +103,12 @@ RUN --mount=type=secret,id=subman_org \
     rm /tmp/install-efa.sh /tmp/package-utils.sh
 
 # Build and install gdrcopy
+ARG GDRCOPY_REPO="https://github.com/NVIDIA/gdrcopy.git"
+ARG GDRCOPY_VERSION="v2.5.1"
 COPY docker/scripts/cuda/builder/build-gdrcopy.sh /tmp/build-gdrcopy.sh
 RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
-    chmod +x /tmp/build-gdrcopy.sh && \
     TARGETPLATFORM=${TARGETPLATFORM} TARGETOS=${TARGETOS} /tmp/build-gdrcopy.sh && \
     rm /tmp/build-gdrcopy.sh
 

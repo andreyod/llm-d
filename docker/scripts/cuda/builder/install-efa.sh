@@ -17,6 +17,8 @@ if [ "${TARGETOS}" = "ubuntu" ]; then
     echo "Temporary workaround - EFA does not support Ubuntu 20.04, and we have to use this in the builder image for Ubuntu for glibc compatiblility."
     echo "See https://github.com/vllm-project/vllm/blob/v0.11.0/docker/Dockerfile#L18-L24 and"
     echo "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html#efa-os for more information."
+    # create empty directory so copy doesn't fail
+    mkdir -p /opt/amazon/efa
     exit 0
 fi
 
@@ -39,7 +41,8 @@ mkdir -p /tmp/efa
 cd /tmp/efa
 curl -O https://efa-installer.amazonaws.com/aws-efa-installer-1.43.3.tar.gz
 tar -xf aws-efa-installer-1.43.3.tar.gz && cd aws-efa-installer
-./efa_installer.sh --skip-kmod --skip-plugin --skip-limit-conf --no-verify -y
+# ./efa_installer.sh --skip-kmod --skip-plugin --skip-limit-conf -d --no-verify -y
+./efa_installer.sh --skip-plugin --skip-limit-conf -d --no-verify -y
 mkdir -p /etc/ld.so.conf.d/
 ldconfig
 cd /tmp

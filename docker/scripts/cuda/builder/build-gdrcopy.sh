@@ -5,6 +5,9 @@ set -Eeu
 #
 # Required environment variables:
 # - USE_SCCACHE: whether to use sccache (true/false)
+# - GDRCOPY_REPO: git repo to build GDRCopy from
+# - GDRCOPY_VERSION: git ref to build GDRCopy from
+# - GRDRCOPY_PREFIX: location to install GDR Copy to
 # Optional environment variables:
 # - TARGETPLATFORM: platform target (linux/arm64 or linux/amd64)
 # - TARGETOS: OS type (ubuntu or rhel)
@@ -36,8 +39,8 @@ case "${TARGETPLATFORM:-linux/amd64}" in
   *) echo "Unsupported TARGETPLATFORM: ${TARGETPLATFORM}" >&2; exit 1 ;;
 esac
 
-git clone https://github.com/NVIDIA/gdrcopy.git
-cd gdrcopy
+git clone "${GDRCOPY_REPO}" gdrcopy && cd gdrcopy
+git checkout -q "${GDRCOPY_VERSION}"
 
 if [ "${USE_SCCACHE}" = "true" ]; then
     export CC="sccache gcc" CXX="sccache g++"
