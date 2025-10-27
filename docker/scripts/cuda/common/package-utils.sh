@@ -86,6 +86,8 @@ setup_ubuntu_repos() {
     apt-get install -y software-properties-common
     add-apt-repository -y universe
     apt-get update -qq
+    # efa uses apt for installing packages rather than apt-get
+    apt update -qq
 }
 
 # setup rhel repos (EPEL and CUDA)
