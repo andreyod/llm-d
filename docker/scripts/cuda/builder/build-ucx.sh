@@ -29,7 +29,8 @@ fi
 # See: https://github.com/vllm-project/vllm/blob/v0.11.0/docker/Dockerfile#L18-L24 and
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html#efa-os for more information.
 if [ "$TARGETOS" = "ubuntu" ]; then
-    EFA_SUPPORT_FLAG=""
+    # EFA_SUPPORT_FLAG=""
+    EFA_SUPPORT_FLAG="--with-efa"
 elif [ "$TARGETOS" = "rhel" ]; then
     EFA_SUPPORT_FLAG="--with-efa"
 else

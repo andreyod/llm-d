@@ -41,26 +41,26 @@ if [ "${NVSHMEM_VERSION}" = "3.3.20" ] || [ "${NVSHMEM_VERSION}" = "3.3.9" ]; th
     git apply /tmp/patches/cks_nvshmem"${NVSHMEM_VERSION}".patch
 fi
 
-# Temporary workaround - EFA does not support Ubuntu 20.04, and we have to use this in the builder image for Ubuntu for glibc compatiblility.
-# See: https://github.com/vllm-project/vllm/blob/v0.11.0/docker/Dockerfile#L18-L24 and
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html#efa-os for more information.
-EFA_FLAGS=()
-if [ "$TARGETOS" = "ubuntu" ]; then
-    EFA_FLAGS+=(-DNVSHMEM_LIBFABRIC_SUPPORT=0)
-elif [ "$TARGETOS" = "rhel" ]; then
-    EFA_FLAGS+=(
-        -DNVSHMEM_LIBFABRIC_SUPPORT=1
-        -DLIBFABRIC_HOME="${EFA_PREFIX}"
-        -DCMAKE_PREFIX_PATH="${EFA_PREFIX};${UCX_PREFIX}"
-        -DCMAKE_INCLUDE_PATH="${EFA_PREFIX}/include;${UCX_PREFIX}/include"
-        -DCMAKE_LIBRARY_PATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib"
-        -DCMAKE_INSTALL_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib"
-        -DCMAKE_BUILD_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib"
-    )
-else
-    echo "ERROR: Unsupported TARGETOS='$TARGETOS'. Must be 'ubuntu' or 'rhel'." >&2
-    exit 1
-fi
+# # Temporary workaround - EFA does not support Ubuntu 20.04, and we have to use this in the builder image for Ubuntu for glibc compatiblility.
+# # See: https://github.com/vllm-project/vllm/blob/v0.11.0/docker/Dockerfile#L18-L24 and
+# # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html#efa-os for more information.
+# EFA_FLAGS=()
+# if [ "$TARGETOS" = "ubuntu" ]; then
+#     EFA_FLAGS+=(-DNVSHMEM_LIBFABRIC_SUPPORT=0)
+# elif [ "$TARGETOS" = "rhel" ]; then
+#     EFA_FLAGS+=(
+#         -DNVSHMEM_LIBFABRIC_SUPPORT=1
+#         -DLIBFABRIC_HOME="${EFA_PREFIX}"
+#         -DCMAKE_PREFIX_PATH="${EFA_PREFIX};${UCX_PREFIX}"
+#         -DCMAKE_INCLUDE_PATH="${EFA_PREFIX}/include;${UCX_PREFIX}/include"
+#         -DCMAKE_LIBRARY_PATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib"
+#         -DCMAKE_INSTALL_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib"
+#         -DCMAKE_BUILD_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib"
+#     )
+# else
+#     echo "ERROR: Unsupported TARGETOS='$TARGETOS'. Must be 'ubuntu' or 'rhel'." >&2
+#     exit 1
+# fi
 
 mkdir build
 cd build
@@ -83,7 +83,13 @@ cmake \
     -DNVSHMEM_BUILD_TESTS=0 \
     -DNVSHMEM_BUILD_EXAMPLES=0 \
     -DGDRCOPY_HOME=/usr/local \
-    "${EFA_FLAGS[@]}" \
+    -DNVSHMEM_LIBFABRIC_SUPPORT=1 \
+    -DLIBFABRIC_HOME="${EFA_PREFIX}" \
+    -DCMAKE_PREFIX_PATH="${EFA_PREFIX};${UCX_PREFIX}" \
+    -DCMAKE_INCLUDE_PATH="${EFA_PREFIX}/include;${UCX_PREFIX}/include" \
+    -DCMAKE_LIBRARY_PATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
+    -DCMAKE_INSTALL_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
+    -DCMAKE_BUILD_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
     ..
 
 ninja -j"$(nproc)"
