@@ -7,10 +7,11 @@ set -Eeu
 # - BUILD_NIXL_FROM_SOURCE: if nixl should be installed by vLLM or has been built from source in the builder stages
 # - NIXL_REPO: Git repo to use for NIXL
 # - NIXL_VERSION: Git ref to use for NIXL
-# - USE_SCCACHE: whether to use sccache (true/false)
+# - NIXL_PREFIX: Path to install NIXL to
 # - EFA_PREFIX: Path to Libfabric installation
 # - UCX_PREFIX: Path to UCX installation
 # - VIRTUAL_ENV: Path to the virtual environment
+# - USE_SCCACHE: whether to use sccache (true/false)
 # - TARGETOS: OS type (ubuntu or rhel)
 
 if [ "${BUILD_NIXL_FROM_SOURCE}" = "false" ]; then
@@ -39,7 +40,7 @@ if [ "${TARGETOS}" = "rhel" ]; then
 fi
 
 meson setup build \
-    --prefix=/usr/local \
+    --prefix=${NIXL_PREFIX} \
     -Dbuildtype=release \
     -Ducx_path=${UCX_PREFIX} \
     ${LIBFABRIC_PATH_FLAG} \

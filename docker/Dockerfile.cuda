@@ -86,6 +86,7 @@ RUN export UV_INSTALL_DIR=/usr/local/bin && \
 ENV NVSHMEM_PREFIX="/opt/nvshmem-${NVSHMEM_VERSION}" \
     EFA_PREFIX="/opt/amazon/efa" \
     UCX_PREFIX="/opt/ucx" \
+    NIXL_PREFIX="/opt/nixl" \
     PATH="${NVSHMEM_PREFIX}/bin:${VIRTUAL_ENV}/bin:${PATH}" \
     LIBRARY_PATH="${NVSHMEM_PREFIX}/lib:${NVSHMEM_PREFIX}/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/lib64" \
     CPATH="${NVSHMEM_PREFIX}/include:/usr/include:/usr/local/include:/usr/local/cuda/include:${CPATH}" \

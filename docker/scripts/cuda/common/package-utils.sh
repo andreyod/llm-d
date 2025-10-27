@@ -11,6 +11,8 @@
 
 # Assumes rhel check in consuming script
 ensure_registered() {
+  echo "beginning registration process"
+  set -x
   if [ ! -f /etc/pki/consumer/cert.pem ]; then
     if [ -f /run/secrets/subman_org ] && [ -f /run/secrets/subman_activation_key ]; then
         subscription-manager register \
@@ -19,15 +21,19 @@ ensure_registered() {
         --force
     fi
   fi
+  set +x
 }
 
 # Assumes rhel check in consuming script
 ensure_unregistered() {
+  echo "beginning un-registration process"
+  set -x
   if [ -f /etc/pki/consumer/cert.pem ]; then
     subscription-manager unregister || true
   fi
   subscription-manager clean || true
   rm -rf /etc/pki/entitlement/* /etc/pki/consumer/* /etc/rhsm/* /var/cache/dnf/* || true
+  set +x
 }
 
 # detect architecture for repo URLs
