@@ -7,13 +7,14 @@ set -Eeu
 # - VIRTUAL_ENV: path to Python virtual environment
 # - CUDA_MAJOR: CUDA major version (e.g., 12)
 # - NVSHMEM_PREFIX: NVSHMEM installation directory
-# - FLASHINFER_VERSION: FlashInfer version tag
+# - FLASHINFER_REPO: FlashInfer git repo
+# - FLASHINFER_VERSION: FlashInfer git ref
 # - DEEPEP_REPO: DeepEP repository URL
 # - DEEPEP_VERSION: DeepEP version tag
 # - DEEPGEMM_REPO: DeepGEMM repository URL
 # - DEEPGEMM_VERSION: DeepGEMM version tag
 # - PPLX_KERNELS_REPO: pplx-kernels repository URL
-# - PPLX_KERNELS_SHA: pplx-kernels commit SHA
+# - PPLX_KERNELS_VERSION: pplx-kernels commit SHA
 # - USE_SCCACHE: whether to use sccache (true/false)
 # - TARGETPLATFORM: Docker buildx platform (e.g., linux/amd64, linux/arm64)
 
@@ -30,8 +31,7 @@ cd /tmp
 
 # build FlashInfer wheel
 uv pip uninstall flashinfer-python || true
-git clone https://github.com/flashinfer-ai/flashinfer.git
-cd flashinfer
+git clone "${FLASHINFER_REPO}" flashinfer && cd flashinfer
 git checkout -q "${FLASHINFER_VERSION}"
 uv build --wheel --no-build-isolation --out-dir /wheels
 cd ..
@@ -58,7 +58,7 @@ rm -rf deepgemm
 if [ "${TARGETPLATFORM}" != "linux/arm64" ]; then
     git clone "${PPLX_KERNELS_REPO}" pplx-kernels
     cd pplx-kernels
-    git checkout "${PPLX_KERNELS_SHA}"
+    git checkout "${PPLX_KERNELS_VERSION}"
     TORCH_CUDA_ARCH_LIST="9.0a;10.0+PTX" NVSHMEM_PREFIX="${NVSHMEM_PREFIX}" uv build --wheel --out-dir /wheels
     cd ..
     rm -rf pplx-kernels

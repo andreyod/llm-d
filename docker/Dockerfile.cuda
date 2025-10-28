@@ -167,26 +167,16 @@ RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
 
 WORKDIR /workspace
 
-# Define commit SHAs as build args to avoid layer invalidation
-ARG LMCACHE_REPO=https://github.com/neuralmagic/LMCache.git
-ARG LMCACHE_COMMIT_SHA="0db8ae4746a207a72483d716b5f82545a2ead24b"
-ARG VLLM_COMMIT_SHA="b8b302cde434df8c9289a2b465406b47ebab1c2d"
-
-# Build LMCache wheel (skip on ARM64 - infinistore dependency has no ARM wheels)
-# hadolint ignore=DL3003,SC1091
+ARG LMCACHE_REPO=https://github.com/LMCache/LMCache.git
+ARG LMCACHE_VERSION="0db8ae4746a207a72483d716b5f82545a2ead24b"
+ARG INFINISTORE_REPO="https://github.com/bytedance/InfiniStore.git"
+ARG INFINISTORE_VERSION="0.2.33"
+COPY docker/scripts/cuda/builder/build-lmcache.sh /tmp/build-lmcache.sh
 RUN --mount=type=cache,target=/var/cache/git \
-    if [ "${TARGETPLATFORM}" != "linux/arm64" ]; then \
-        git clone "${LMCACHE_REPO}" LMCache && \
-        cd LMCache && \
-        git checkout -q "${LMCACHE_COMMIT_SHA}" && \
-        cd .. && \
-        cd LMCache && \
-        . ${VIRTUAL_ENV}/bin/activate && \
-        uv build --wheel --no-build-isolation --out-dir /wheels  && \
-        cd ..; \
-    else \
-        echo "Skipping LMCache build on ARM64 (infinistore dependency lacks ARM wheels)"; \
-    fi
+    --mount=type=secret,id=aws_access_key_id \
+    --mount=type=secret,id=aws_secret_access_key \
+    /tmp/build-lmcache.sh && \
+    rm /tmp/build-lmcache.sh
 
 # Use existing virtual environment at /opt/vllm
 WORKDIR /workspace/vllm
@@ -199,8 +189,8 @@ ARG DEEPEP_VERSION="v1.2.1"
 ARG DEEPGEMM_REPO="https://github.com/deepseek-ai/DeepGEMM"
 ARG DEEPGEMM_VERSION="v2.1.0"
 ARG PPLX_KERNELS_REPO="https://github.com/perplexityai/pplx-kernels"
-ARG PPLX_KERNELS_SHA="12cecfda252e4e646417ac263d96e994d476ee5d"
-
+ARG PPLX_KERNELS_VERSION="12cecfda252e4e646417ac263d96e994d476ee5d"
+ARG FLASHINFER_REPO="https://github.com/flashinfer-ai/flashinfer.git"
 ARG FLASHINFER_VERSION="v0.3.1"
 
 # Build compiled packages as wheels (only ones that need build tools)
@@ -208,7 +198,6 @@ COPY docker/scripts/cuda/builder/build-compiled-wheels.sh /tmp/build-compiled-wh
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
-    chmod +x /tmp/build-compiled-wheels.sh && \
     TARGETPLATFORM=${TARGETPLATFORM} /tmp/build-compiled-wheels.sh && \
     rm /tmp/build-compiled-wheels.sh
 
@@ -325,7 +314,7 @@ RUN mkdir -p /opt/vllm-source && \
     setfacl -R -m g:0:rwX -m d:g:0:rwX /opt/vllm-source || true
 
 # Define commit SHAs as build args to avoid layer invalidation
-ARG LMCACHE_COMMIT_SHA="0db8ae4746a207a72483d716b5f82545a2ead24b"
+ARG LMCACHE_VERSION="0db8ae4746a207a72483d716b5f82545a2ead24b"
 ARG VLLM_REPO="https://github.com/vllm-project/vllm.git"
 ARG VLLM_COMMIT_SHA="b8b302cde434df8c9289a2b465406b47ebab1c2d"
 # vllm commit to use for precompiled wheel lookup (defaults to VLLM_COMMIT_SHA)
