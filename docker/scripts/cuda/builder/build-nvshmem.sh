@@ -20,7 +20,7 @@ set -Eeu
 cd /tmp
 
 . /usr/local/bin/setup-sccache
-. "${VIRTUAL_ENV}/bin/activate"
+# . "${VIRTUAL_ENV}/bin/activate"
 
 if [ "${NVSHMEM_USE_GIT}" = "true" ]; then
     git clone "${NVSHMEM_REPO}" nvshmem_src && cd nvshmem_src
@@ -66,21 +66,20 @@ cmake \
 ninja -j"$(nproc)"
 ninja install
 
+################ nvshmem4py-cu12 build
+
+. "${VIRTUAL_ENV}/bin/activate"
+
 # Build ONLY the cu12 python wheel
 # Ensure the Python build can find CUDA and NVSHMEM
 export NVSHMEM_HOME="${NVSHMEM_PREFIX}"
-export CUDA_HOME="${CUDA_HOME}"
 export CFLAGS="-I${NVSHMEM_PREFIX}/include ${CFLAGS:-}"
 export LDFLAGS="-L${NVSHMEM_PREFIX}/lib ${LDFLAGS:-}"
-export LD_LIBRARY_PATH="${NVSHMEM_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
 
 pushd ../nvshmem4py
 # Generate pyproject for CUDA major 12 only
 python ./scripts/generate_pyproject_toml.py 12 . > pyproject.toml
-
-# Build a wheel for the *current* interpreter (your venv) only
-# You can use 'pip wheel' or 'python -m build'; pip wheel is fine here.
-pip wheel . -w /wheels
+uv build --wheel --no-build-isolation --out-dir /wheels
 
 popd
 
