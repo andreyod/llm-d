@@ -168,7 +168,7 @@ RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
 WORKDIR /workspace
 
 ARG LMCACHE_REPO=https://github.com/LMCache/LMCache.git
-ARG LMCACHE_VERSION="0db8ae4746a207a72483d716b5f82545a2ead24b"
+ARG LMCACHE_VERSION="v0.3.8"
 ARG INFINISTORE_REPO="https://github.com/bytedance/InfiniStore.git"
 ARG INFINISTORE_VERSION="0.2.33"
 COPY docker/scripts/cuda/builder/build-lmcache.sh /tmp/build-lmcache.sh
