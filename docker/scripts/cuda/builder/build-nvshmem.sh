@@ -44,6 +44,10 @@ fi
 
 mkdir -p build && cd build
 
+realpath .
+ls /tmp/nvshmem_src/build || true
+ls /tmp/nvshmem_src || true
+
 command -v cmake
 
 cmake \
