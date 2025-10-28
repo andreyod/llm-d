@@ -7,7 +7,7 @@ set -Eeu
 # - USE_SCCACHE: whether to use sccache (true/false)
 # - GDRCOPY_REPO: git repo to build GDRCopy from
 # - GDRCOPY_VERSION: git ref to build GDRCopy from
-# - GRDRCOPY_PREFIX: location to install GDR Copy to
+# - GDRCOPY_PREFIX: location to install GDR Copy to
 # Optional environment variables:
 # - TARGETPLATFORM: platform target (linux/arm64 or linux/amd64)
 # - TARGETOS: OS type (ubuntu or rhel)
@@ -45,7 +45,7 @@ git checkout -q "${GDRCOPY_VERSION}"
 if [ "${USE_SCCACHE}" = "true" ]; then
     export CC="sccache gcc" CXX="sccache g++"
 fi
-ARCH="${UUARCH}" PREFIX=/usr/local DESTLIB=/usr/local/lib make lib_install
+ARCH="${UUARCH}" PREFIX="${GDRCOPY_PREFIX}" DESTLIB="${GDRCOPY_PREFIX}/lib" make lib_install
 
 cp src/libgdrapi.so.2.* "${LIBDIR}/"
 # also stage in /tmp for runtime stage to copy

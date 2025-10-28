@@ -31,10 +31,6 @@ if [ "${USE_SCCACHE}" = "true" ]; then
     export CC="sccache gcc" CXX="sccache g++" NVCC="sccache nvcc"
 fi
 
-# pkg-config --modversion libfabric || true
-# pkg-config --modversion hwloc || true
-# END DEBUG
-
 meson setup build \
     --prefix=${NIXL_PREFIX} \
     -Dbuildtype=release \
