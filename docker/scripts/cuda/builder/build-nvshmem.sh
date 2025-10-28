@@ -22,6 +22,10 @@ cd /tmp
 . /usr/local/bin/setup-sccache
 . "${VIRTUAL_ENV}/bin/activate"
 
+# Workaround - NVSHMEM requires Cmake 3.19+ but Ubuntu 20.04 defaults to 3.16.3
+/tmp/install-cmake.sh
+cmake --version
+
 if [ "${NVSHMEM_USE_GIT}" = "true" ]; then
     git clone "${NVSHMEM_REPO}" nvshmem_src && cd nvshmem_src
     git checkout -q "${NVSHMEM_VERSION}"
