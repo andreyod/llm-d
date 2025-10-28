@@ -8,7 +8,6 @@ set -Eeu
 # - /run/secrets/aws_secret_access_key: AWS secret access key for role that can only interact with SCCache S3 Bucket
 # --------------------------------------------
 # Required environment variables:
-# - TARGETOS: OS type (ubuntu or rhel)
 # - CUDA_HOME: Cuda runtime path to install UCX against
 # - UCX_REPO: git remote to build UCX from
 # - UCX_VERSION: git ref to build UCX from
@@ -26,23 +25,9 @@ if [ "${USE_SCCACHE}" = "true" ]; then
     export CC="sccache gcc" CXX="sccache g++" 
 fi
 
-# Temporary workaround - EFA does not support Ubuntu 20.04, and we have to use this in the builder image for Ubuntu for glibc compatiblility.
-# See: https://github.com/vllm-project/vllm/blob/v0.11.0/docker/Dockerfile#L18-L24 and
-# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html#efa-os for more information.
-if [ "$TARGETOS" = "ubuntu" ]; then
-    # EFA_SUPPORT_FLAG=""
-    EFA_SUPPORT_FLAG="--with-efa"
-elif [ "$TARGETOS" = "rhel" ]; then
-    EFA_SUPPORT_FLAG="--with-efa"
-else
-    echo "ERROR: Unsupported TARGETOS='$TARGETOS'. Must be 'ubuntu' or 'rhel'." >&2
-    exit 1
-fi
-
 ./autogen.sh 
 ./contrib/configure-release \
     --prefix="${UCX_PREFIX}" \
-    "${EFA_SUPPORT_FLAG}" \
     --enable-shared \
     --disable-static \
     --disable-doxygen-doc \
@@ -52,6 +37,7 @@ fi
     --with-verbs \
     --with-dm \
     --with-gdrcopy=/usr/local \
+    --with-efa \
     --enable-mt
 
 make -j$(nproc) 
