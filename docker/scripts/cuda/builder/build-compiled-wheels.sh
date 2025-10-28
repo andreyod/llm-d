@@ -27,6 +27,8 @@ cd /tmp
 uv pip install build cuda-python numpy setuptools-scm ninja cmake
 
 export NVSHMEM_DIR="${NVSHMEM_PREFIX}"
+# overwrite the TORCH_CUDA_ARCH_LIST for MoE kernels
+export TORCH_CUDA_ARCH_LIST="9.0a;10.0+PTX" 
 
 # build FlashInfer wheel
 uv pip uninstall flashinfer-python || true
@@ -68,7 +70,7 @@ rm -rf deepgemm
 git clone "${PPLX_KERNELS_REPO}" pplx-kernels
 cd pplx-kernels
 git checkout -q "${PPLX_KERNELS_VERSION}"
-TORCH_CUDA_ARCH_LIST="9.0a;10.0+PTX" NVSHMEM_PREFIX="${NVSHMEM_PREFIX}" uv build --wheel --out-dir /wheels
+uv build --wheel --out-dir /wheels
 cd ..
 rm -rf pplx-kernels
 
