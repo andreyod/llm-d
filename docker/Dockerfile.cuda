@@ -89,9 +89,9 @@ ENV NVSHMEM_PREFIX="/opt/nvshmem-${NVSHMEM_VERSION}" \
     UCX_PREFIX="/opt/ucx" \
     NIXL_PREFIX="/opt/nixl" \
     PATH="${NVSHMEM_PREFIX}/bin:${VIRTUAL_ENV}/bin:${PATH}" \
-    LIBRARY_PATH="${EFA_PREFIX}/lib:${EFA_PREFIX}/lib64:${UCX_PREFIX}/lib:${UCX_PREFIX}/lib64:${NVSHMEM_PREFIX}/lib:${NVSHMEM_PREFIX}/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/lib64" \
-    CPATH="${NVSHMEM_PREFIX}/include:/usr/include:/usr/local/include:/usr/local/cuda/include:${CPATH}" \
-    PKG_CONFIG_PATH="${UCX_PREFIX}/lib/ucx/pkgconfig:${UCX_PREFIX}/lib64/ucx/pkgconfig:${EFA_PREFIX}/lib/pkgconfig:${EFA_PREFIX}/lib64/pkgconfig:\
+    LIBRARY_PATH="${EFA_PREFIX}/lib:${EFA_PREFIX}/lib64:${UCX_PREFIX}/lib:${UCX_PREFIX}/lib64:${NVSHMEM_PREFIX}/lib:${NVSHMEM_PREFIX}/lib64:${CUDA_HOME}/lib64:/usr/local/lib:/usr/local/lib64" \
+    CPATH="${NVSHMEM_PREFIX}/include:/usr/include:/usr/local/include:${CUDA_HOME}/include:${CPATH}" \
+    PKG_CONFIG_PATH="${UCX_PREFIX}/lib/pkgconfig:${UCX_PREFIX}/lib64/pkgconfig:${EFA_PREFIX}/lib/pkgconfig:${EFA_PREFIX}/lib64/pkgconfig:\
 /usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig:\
 /usr/lib64/pkgconfig:/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig:${PKG_CONFIG_PATH}"
 
