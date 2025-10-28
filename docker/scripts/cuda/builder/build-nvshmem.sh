@@ -70,7 +70,7 @@ cmake \
     -DGDRCOPY_HOME=/usr/local \
     -DNVSHMEM_LIBFABRIC_SUPPORT=1 \
     -DLIBFABRIC_HOME="${EFA_PREFIX}" \
-    -DNVSHMEM_BUILD_PYTHON=0 \ 
+    -DNVSHMEM_BUILD_PYTHON=0 \
     ..
 
 ninja -j"$(nproc)"
