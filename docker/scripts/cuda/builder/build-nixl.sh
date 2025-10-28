@@ -33,24 +33,10 @@ if [ "${USE_SCCACHE}" = "true" ]; then
     export CC="sccache gcc" CXX="sccache g++" NVCC="sccache nvcc"
 fi
 
-# EFA_LIBDIR=""
-# if [ -d "${EFA_PREFIX}/lib64" ]; then
-#   EFA_LIBDIR="${EFA_PREFIX}/lib64"
-# elif [ -d "${EFA_PREFIX}/lib" ]; then
-#   EFA_LIBDIR="${EFA_PREFIX}/lib"
-# fi
-
-# pass flag explicitly if targeting rhel
-LIBFABRIC_PATH_FLAG=""
-# if [ "${TARGETOS}" = "rhel" ] && [ -n "${EFA_LIBDIR}" ]; then
-#     LIBFABRIC_PATH_FLAG="-Dlibfabric_path=${EFA_LIBDIR}"
-# fi
-
 meson setup build \
     --prefix=${NIXL_PREFIX} \
     -Dbuildtype=release \
     -Ducx_path=${UCX_PREFIX} \
-    ${LIBFABRIC_PATH_FLAG} \
     -Dinstall_headers=true
 
 cd build

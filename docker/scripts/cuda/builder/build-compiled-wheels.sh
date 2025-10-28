@@ -18,13 +18,15 @@ set -Eeu
 # - USE_SCCACHE: whether to use sccache (true/false)
 # - TARGETPLATFORM: Docker buildx platform (e.g., linux/amd64, linux/arm64)
 
+cd /tmp
+
 . "${VIRTUAL_ENV}/bin/activate"
 . /usr/local/bin/setup-sccache
 
 # install build tools (cmake from pip provides 3.22+ needed by pplx-kernels)
 uv pip install build cuda-python numpy setuptools-scm ninja cmake
 
-cd /tmp
+export NVSHMEM_DIR="${NVSHMEM_PREFIX}"
 
 # build FlashInfer wheel
 uv pip uninstall flashinfer-python || true
