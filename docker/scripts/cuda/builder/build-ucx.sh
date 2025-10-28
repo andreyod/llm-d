@@ -42,7 +42,6 @@ fi
 ./autogen.sh 
 ./contrib/configure-release \
     --prefix="${UCX_PREFIX}" \
-    --libdir="${UCX_PREFIX}/lib" \
     "${EFA_SUPPORT_FLAG}" \
     --enable-shared \
     --disable-static \
