@@ -21,10 +21,6 @@ cd /tmp
 . /usr/local/bin/setup-sccache
 . "${VIRTUAL_ENV}/bin/activate"
 
-# Workaround - NVSHMEM requires Cmake 3.19+ but Ubuntu 20.04 defaults to 3.16.3
-/tmp/install-cmake.sh
-cmake --version
-
 if [ "${NVSHMEM_USE_GIT}" = "true" ]; then
     git clone "${NVSHMEM_REPO}" nvshmem_src && cd nvshmem_src
     git checkout -q "${NVSHMEM_VERSION}"
@@ -40,27 +36,6 @@ fi
 if [ "${NVSHMEM_VERSION}" = "3.3.20" ] || [ "${NVSHMEM_VERSION}" = "3.3.9" ]; then
     git apply /tmp/patches/cks_nvshmem"${NVSHMEM_VERSION}".patch
 fi
-
-# # Temporary workaround - EFA does not support Ubuntu 20.04, and we have to use this in the builder image for Ubuntu for glibc compatiblility.
-# # See: https://github.com/vllm-project/vllm/blob/v0.11.0/docker/Dockerfile#L18-L24 and
-# # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html#efa-os for more information.
-# EFA_FLAGS=()
-# if [ "$TARGETOS" = "ubuntu" ]; then
-#     EFA_FLAGS+=(-DNVSHMEM_LIBFABRIC_SUPPORT=0)
-# elif [ "$TARGETOS" = "rhel" ]; then
-#     EFA_FLAGS+=(
-#         -DNVSHMEM_LIBFABRIC_SUPPORT=1
-#         -DLIBFABRIC_HOME="${EFA_PREFIX}"
-#         -DCMAKE_PREFIX_PATH="${EFA_PREFIX};${UCX_PREFIX}"
-#         -DCMAKE_INCLUDE_PATH="${EFA_PREFIX}/include;${UCX_PREFIX}/include"
-#         -DCMAKE_LIBRARY_PATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib"
-#         -DCMAKE_INSTALL_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib"
-#         -DCMAKE_BUILD_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib"
-#     )
-# else
-#     echo "ERROR: Unsupported TARGETOS='$TARGETOS'. Must be 'ubuntu' or 'rhel'." >&2
-#     exit 1
-# fi
 
 mkdir build
 cd build
@@ -91,13 +66,32 @@ cmake \
     -DGDRCOPY_HOME=/usr/local \
     -DNVSHMEM_LIBFABRIC_SUPPORT=1 \
     -DLIBFABRIC_HOME="${EFA_PREFIX}" \
+    -DNVSHMEM_BUILD_PYTHON=0 \ 
     ..
 
 ninja -j"$(nproc)"
 ninja install
 
-# copy python wheel to /wheels
-cp "${NVSHMEM_PREFIX}"/lib/python/dist/nvshmem4py_cu"${CUDA_MAJOR}"-*-cp"${PYTHON_VERSION/./}"-cp"${PYTHON_VERSION/./}"-*linux_*.whl /wheels/
+# Build ONLY the cu12 python wheel
+# Ensure the Python build can find CUDA and NVSHMEM
+export NVSHMEM_HOME="${NVSHMEM_PREFIX}"
+export CUDA_HOME="${CUDA_HOME}"
+export CFLAGS="-I${NVSHMEM_PREFIX}/include ${CFLAGS:-}"
+export LDFLAGS="-L${NVSHMEM_PREFIX}/lib ${LDFLAGS:-}"
+export LD_LIBRARY_PATH="${NVSHMEM_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+
+pushd ../nvshmem4py
+# Generate pyproject for CUDA major 12 only
+python ./scripts/generate_pyproject_toml.py 12 . > pyproject.toml
+
+# Build a wheel for the *current* interpreter (your venv) only
+# You can use 'pip wheel' or 'python -m build'; pip wheel is fine here.
+pip wheel . -w /wheels
+
+popd
+
+# # copy python wheel to /wheels
+# cp "${NVSHMEM_PREFIX}"/lib/python/dist/nvshmem4py_cu"${CUDA_MAJOR}"-*-cp"${PYTHON_VERSION/./}"-cp"${PYTHON_VERSION/./}"-*linux_*.whl /wheels/
 
 cd /tmp
 rm -rf nvshmem_src*
