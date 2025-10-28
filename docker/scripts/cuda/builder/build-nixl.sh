@@ -31,19 +31,8 @@ if [ "${USE_SCCACHE}" = "true" ]; then
     export CC="sccache gcc" CXX="sccache g++" NVCC="sccache nvcc"
 fi
 
-# DEBUG
-ls -l /opt/amazon/efa/lib/libfabric.so /opt/amazon/efa/lib/libfabric.so.1.27.0 || true
-file /opt/amazon/efa/lib/libfabric.so.1.27.0 || true   # must say aarch64/ARM64
-g++ -x c++ - -o /tmp/t \
-  -L/opt/amazon/efa/lib -lfabric \
-  -Wl,-rpath,/opt/amazon/efa/lib <<<'int main(){return 0;}' || true
-
-export PKG_CONFIG_PATH=/opt/amazon/efa/lib/pkgconfig:${PKG_CONFIG_PATH}
-export LIBRARY_PATH=/opt/amazon/efa/lib:${LIBRARY_PATH}
-export LD_LIBRARY_PATH=/opt/amazon/efa/lib:${LD_LIBRARY_PATH}
-
-pkg-config --modversion libfabric || true
-pkg-config --modversion hwloc || true
+# pkg-config --modversion libfabric || true
+# pkg-config --modversion hwloc || true
 # END DEBUG
 
 meson setup build \

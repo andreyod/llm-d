@@ -9,6 +9,7 @@ set -Eeu
 # --------------------------------------------
 # Required environment variables:
 # - TARGETOS: OS type (ubuntu or rhel)
+# - CUDA_HOME: Cuda runtime path to install UCX against
 # - UCX_REPO: git remote to build UCX from
 # - UCX_VERSION: git ref to build UCX from
 # - UCX_PREFIX: prefix dir that contains installation path
@@ -48,7 +49,7 @@ fi
     --disable-doxygen-doc \
     --enable-cma \
     --enable-devel-headers \
-    --with-cuda=/usr/local/cuda \
+    --with-cuda="${CUDA_HOME}" \
     --with-verbs \
     --with-dm \
     --with-gdrcopy=/usr/local \
