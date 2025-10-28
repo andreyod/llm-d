@@ -24,9 +24,6 @@ set -Eeu
 # install build tools (cmake from pip provides 3.22+ needed by pplx-kernels)
 uv pip install build cuda-python numpy setuptools-scm ninja cmake
 
-# install nvshmem4py from PyPI (works on both x86 and ARM64)
-uv pip install nvshmem4py-cu"${CUDA_MAJOR}"==0.1.2
-
 cd /tmp
 
 # build FlashInfer wheel
