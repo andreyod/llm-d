@@ -137,7 +137,7 @@ RUN --mount=type=cache,target=/var/cache/git \
     rm /tmp/build-nvshmem.sh
 
 ENV CPPFLAGS="-I${EFA_PREFIX}/include -I${NVSHMEM_DIR}/include ${CPPFLAGS}" \
-    LDFLAGS="-L${EFA_PREFIX}/lib -L${NVSHMEM_DIR}/lib ${LDFLAGS}"
+    LDFLAGS="-Wl,-rpath,${EFA_PREFIX}/lib -L${NVSHMEM_DIR}/lib ${LDFLAGS}"
 
 # Pin torch, so all deps are built against the same version
 # as vllm itself
