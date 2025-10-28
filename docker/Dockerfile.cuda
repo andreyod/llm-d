@@ -89,7 +89,7 @@ ENV NVSHMEM_PREFIX="/opt/nvshmem-${NVSHMEM_VERSION}" \
     UCX_PREFIX="/opt/ucx" \
     NIXL_PREFIX="/opt/nixl" \
     PATH="${NVSHMEM_PREFIX}/bin:${VIRTUAL_ENV}/bin:${PATH}" \
-    LIBRARY_PATH="${NVSHMEM_PREFIX}/lib:${NVSHMEM_PREFIX}/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/lib64" \
+    LIBRARY_PATH="${EFA_PREFIX}/lib:${NVSHMEM_PREFIX}/lib:${NVSHMEM_PREFIX}/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/lib64" \
     CPATH="${NVSHMEM_PREFIX}/include:/usr/include:/usr/local/include:/usr/local/cuda/include:${CPATH}" \
     PKG_CONFIG_PATH="${UCX_PREFIX}/lib/ucx/pkgconfig:${UCX_PREFIX}/lib/pkgconfig:${EFA_PREFIX}/lib64/pkgconfig:${EFA_PREFIX}/lib/pkgconfig:\
 /usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig:\
@@ -136,8 +136,8 @@ RUN --mount=type=cache,target=/var/cache/git \
     /tmp/build-nvshmem.sh \
     rm /tmp/build-nvshmem.sh
 
-ENV CPPFLAGS="-I$NVSHMEM_DIR/include ${CPPFLAGS}" \
-    LDFLAGS="-L$NVSHMEM_DIR/lib ${LDFLAGS}"
+ENV CPPFLAGS="-I${EFA_PREFIX}/include -I${NVSHMEM_DIR}/include ${CPPFLAGS}" \
+    LDFLAGS="-L${EFA_PREFIX}/lib -L${NVSHMEM_DIR}/lib ${LDFLAGS}"
 
 # Pin torch, so all deps are built against the same version
 # as vllm itself
