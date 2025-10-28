@@ -55,24 +55,17 @@ uv build --wheel --no-build-isolation --out-dir /wheels
 cd ..
 rm -rf deepgemm
 
-# # build pplx-kernels wheel (skip on ARM64)
-# if [ "${TARGETPLATFORM}" != "linux/arm64" ]; then
-#     git clone "${PPLX_KERNELS_REPO}" pplx-kernels
-#     cd pplx-kernels
-#     git checkout "${PPLX_KERNELS_VERSION}"
-#     TORCH_CUDA_ARCH_LIST="9.0a;10.0+PTX" NVSHMEM_PREFIX="${NVSHMEM_PREFIX}" uv build --wheel --out-dir /wheels
-#     cd ..
-#     rm -rf pplx-kernels
-# else
-#     echo "Skipping pplx-kernels build on ARM64"
-# fi
-
-git clone "${PPLX_KERNELS_REPO}" pplx-kernels
-cd pplx-kernels
-git checkout -q "${PPLX_KERNELS_VERSION}"
-uv build --wheel --out-dir /wheels
-cd ..
-rm -rf pplx-kernels
+# build pplx-kernels wheel (skip on ARM64)
+if [ "${TARGETPLATFORM}" != "linux/arm64" ]; then
+    git clone "${PPLX_KERNELS_REPO}" pplx-kernels
+    cd pplx-kernels
+    git checkout "${PPLX_KERNELS_VERSION}"
+    uv build --wheel --out-dir /wheels
+    cd ..
+    rm -rf pplx-kernels
+else
+    echo "Skipping pplx-kernels build on ARM64"
+fi
 
 if [ "${USE_SCCACHE}" = "true" ]; then
     echo "=== Compiled wheels build complete - sccache stats ==="

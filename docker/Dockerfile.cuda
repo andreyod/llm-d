@@ -60,7 +60,7 @@ RUN echo $(cat /tmp/packages/common/builder-packages.json)
 RUN --mount=type=secret,id=subman_org \
     --mount=type=secret,id=subman_activation_key \
     TARGETOS=${TARGETOS} /tmp/install-base-packages.sh && \
-    rm /tmp/install-base-packages.sh /tmp/package-utils.sh && \
+    rm -f /tmp/install-base-packages.sh /tmp/package-utils.sh && \
     rm -rf /tmp/packages
 
 # install cmake 3.19.3 for consistency between ubuntu22.04 and rhel9
@@ -68,7 +68,7 @@ COPY docker/scripts/cuda/builder/install-cmake.sh /tmp/install-cmake.sh
 ARG CMAKE_VERSION="3.19.3"
 RUN --mount=type=cache,target=/var/cache/git \
     /tmp/install-cmake.sh \
-    rm /tmp/install-cmake.sh
+    rm -f /tmp/install-cmake.sh
 
 # Install sccache (after base packages which include curl and openssl-devel)
 COPY docker/scripts/common/setup-sccache.sh /usr/local/bin/setup-sccache
@@ -76,7 +76,7 @@ COPY docker/scripts/cuda/builder/install-sccache.sh /tmp/install-sccache.sh
 RUN --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
     TARGETOS=${TARGETOS} /tmp/install-sccache.sh && \
-    rm /tmp/install-sccache.sh
+    rm -f /tmp/install-sccache.sh
 
 # Install uv and setup Python virtual environment
 RUN export UV_INSTALL_DIR=/usr/local/bin && \
@@ -102,7 +102,7 @@ COPY docker/scripts/cuda/builder/install-efa.sh /tmp/install-efa.sh
 RUN --mount=type=secret,id=subman_org \
     --mount=type=secret,id=subman_activation_key \
     TARGETOS=${TARGETOS} /tmp/install-efa.sh \
-    rm /tmp/install-efa.sh /tmp/package-utils.sh
+    rm -f /tmp/install-efa.sh /tmp/package-utils.sh
 
 # Build and install gdrcopy
 ARG GDRCOPY_REPO="https://github.com/NVIDIA/gdrcopy.git"
@@ -112,7 +112,7 @@ RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
     TARGETPLATFORM=${TARGETPLATFORM} TARGETOS=${TARGETOS} /tmp/build-gdrcopy.sh && \
-    rm /tmp/build-gdrcopy.sh
+    rm -f /tmp/build-gdrcopy.sh
 
 # Build UCX
 ARG UCX_REPO="https://github.com/openucx/ucx.git"
@@ -122,7 +122,7 @@ RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
     /tmp/build-ucx.sh \
-    rm /tmp/build-ucx.sh
+    rm -f /tmp/build-ucx.sh
 
 # Build NVSHMEM
 ARG NVSHMEM_USE_GIT="true"
@@ -135,7 +135,7 @@ RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
     /tmp/build-nvshmem.sh \
-    rm /tmp/build-nvshmem.sh
+    rm -f /tmp/build-nvshmem.sh
 
 ENV CPPFLAGS="-I${EFA_PREFIX}/include -I${NVSHMEM_DIR}/include ${CPPFLAGS}" \
     LDFLAGS="-Wl,-rpath,${EFA_PREFIX}/lib -L${NVSHMEM_DIR}/lib ${LDFLAGS}"
@@ -150,7 +150,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     pyyaml \
     types-PyYAML \
     pytest \
-    patchelf>=0.11.0
+    "patchelf>=0.11.0"
 
 # Decide to build NIXL from source. If set to false, NIXL will be installed as a dependency of vLLM in the `install-vllm.sh` script, and the `build-nixl.sh` script will be a NoOp.
 ARG BUILD_NIXL_FROM_SOURCE="true"
@@ -161,7 +161,7 @@ RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
     /tmp/build-nixl.sh \
-    rm /tmp/build-nixl.sh
+    rm -f /tmp/build-nixl.sh
 
 RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
     echo "/usr/local/lib64" >> /etc/ld.so.conf.d/local.conf && \
@@ -178,7 +178,7 @@ RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
     /tmp/build-lmcache.sh && \
-    rm /tmp/build-lmcache.sh
+    rm -f /tmp/build-lmcache.sh
 
 # Use existing virtual environment at /opt/vllm
 WORKDIR /workspace/vllm
@@ -201,7 +201,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
     TARGETPLATFORM=${TARGETPLATFORM} /tmp/build-compiled-wheels.sh && \
-    rm /tmp/build-compiled-wheels.sh
+    rm -f /tmp/build-compiled-wheels.sh
 
 # ============================================================================
 # RUNTIME STAGE - Minimal runtime image
@@ -238,14 +238,14 @@ COPY docker/packages /tmp/packages
 COPY docker/scripts/cuda/runtime/install-runtime-packages.sh /tmp/install-runtime-packages.sh
 RUN chmod +x /tmp/install-runtime-packages.sh && \
     TARGETOS=${TARGETOS} /tmp/install-runtime-packages.sh && \
-    rm /tmp/install-runtime-packages.sh /tmp/package-utils.sh && \
+    rm -f /tmp/install-runtime-packages.sh /tmp/package-utils.sh && \
     rm -rf /tmp/packages
 
 COPY --from=builder /opt/amazon/efa /opt/amazon/efa/
 
 # Copy gdrcopy libraries from builder
 # Install to /usr/local/lib (always present) and multiarch lib dir
-COPY --from=builder /usr/local/lib/libgdrapi.so* /usr/local/lib/
+COPY --from=builder /opt/gdrcopy/lib/libgdrapi.so* /usr/local/lib/
 # Copy from builder's multiarch directory to runtime's matching directory
 RUN if [ "${TARGETOS:-rhel}" = "ubuntu" ]; then \
         if [ "${TARGETPLATFORM:-linux/amd64}" = "linux/arm64" ]; then \
@@ -275,10 +275,10 @@ RUN if [ -d /tmp/gdrcopy_libs ]; then \
 COPY --from=builder /opt/nvshmem-${NVSHMEM_VERSION}/ /opt/nvshmem-${NVSHMEM_VERSION}/
 
 # Copy UCX libraries from builder
-COPY --from=builder /usr/local/lib/libucp* /usr/local/lib/
-COPY --from=builder /usr/local/lib/libucs* /usr/local/lib/
-COPY --from=builder /usr/local/lib/libuct* /usr/local/lib/
-COPY --from=builder /usr/local/lib/libucm* /usr/local/lib/
+COPY --from=builder /opt/ucx/lib/libucp* /usr/local/lib/
+COPY --from=builder /opt/ucx/lib/libucs* /usr/local/lib/
+COPY --from=builder /opt/ucx/lib/libuct* /usr/local/lib/
+COPY --from=builder /opt/ucx/lib/libucm* /usr/local/lib/
 COPY --from=builder /opt/ucx/lib /usr/local/lib/ucx/
 
 # need to deal with this one with pathing between ubuntu and rhel
