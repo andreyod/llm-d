@@ -18,5 +18,3 @@ curl -fsSL "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}
 -o /tmp/cmake.sh
 chmod +x /tmp/cmake.sh
 /tmp/cmake.sh --skip-license --prefix=/usr/local --exclude-subdir
-cmake --version
-export CMAKE_BINARY=$(command -v /usr/local/bin/cmake)

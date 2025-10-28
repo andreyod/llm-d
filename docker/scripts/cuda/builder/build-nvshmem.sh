@@ -18,6 +18,7 @@ set -Eeu
 # - USE_SCCACHE: whether to use sccache (true/false)
 
 cd /tmp
+
 . /usr/local/bin/setup-sccache
 . "${VIRTUAL_ENV}/bin/activate"
 
@@ -37,14 +38,9 @@ if [ "${NVSHMEM_VERSION}" = "3.3.20" ] || [ "${NVSHMEM_VERSION}" = "3.3.9" ]; th
     git apply /tmp/patches/cks_nvshmem"${NVSHMEM_VERSION}".patch
 fi
 
-mkdir build
-cd build
+mkdir -p build && cd build
 
-    # -DCMAKE_PREFIX_PATH="${EFA_PREFIX};${UCX_PREFIX}" \
-    # -DCMAKE_INCLUDE_PATH="${EFA_PREFIX}/include;${UCX_PREFIX}/include" \
-    # -DCMAKE_LIBRARY_PATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
-    # -DCMAKE_INSTALL_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
-    # -DCMAKE_BUILD_RPATH="${EFA_PREFIX}/lib64;${EFA_PREFIX}/lib;${UCX_PREFIX}/lib" \
+command -v cmake
 
 cmake \
     -G Ninja \
