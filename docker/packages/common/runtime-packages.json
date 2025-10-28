@@ -12,7 +12,6 @@
     "gcc": "gcc"
   },
   "ubuntu_only": [
-    "libhwloc",
-    "libfabric-dev"
+    "hwloc"
   ]
 }
