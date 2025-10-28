@@ -12,7 +12,6 @@
 # Assumes rhel check in consuming script
 ensure_registered() {
   set -euo pipefail
-  set -x
   install -d -m0755 /etc/pki/consumer /etc/pki/entitlement /etc/rhsm
   subscription-manager clean || true
   if [ ! -f /etc/pki/consumer/cert.pem ]; then
@@ -23,19 +22,16 @@ ensure_registered() {
       --force
     subscription-manager refresh || true
   fi
-  set +x
 }
 
 # Assumes rhel check in consuming script
 ensure_unregistered() {
   echo "beginning un-registration process"
-  set -x
   if [ -f /etc/pki/consumer/cert.pem ]; then
     subscription-manager unregister || true
   fi
   subscription-manager clean || true
   rm -rf /etc/pki/entitlement/* /etc/pki/consumer/* /etc/rhsm/* /var/cache/dnf/* || true
-  set +x
 }
 
 # detect architecture for repo URLs

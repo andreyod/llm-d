@@ -38,6 +38,8 @@ if [ "${NVSHMEM_VERSION}" = "3.3.20" ] || [ "${NVSHMEM_VERSION}" = "3.3.9" ]; th
     git apply /tmp/patches/cks_nvshmem"${NVSHMEM_VERSION}".patch
 fi
 
+mkdir -p build && cd build
+
 cmake \
     -G Ninja \
     -DNVSHMEM_PREFIX="${NVSHMEM_PREFIX}" \
