@@ -37,6 +37,7 @@ meson setup build \
     --prefix=${NIXL_PREFIX} \
     -Dbuildtype=release \
     -Ducx_path=${UCX_PREFIX} \
+    -Dlibfabric_path=${EFA_PREFIX} \
     -Dinstall_headers=true
 
 cd build
