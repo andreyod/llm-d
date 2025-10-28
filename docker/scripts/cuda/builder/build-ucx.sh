@@ -50,5 +50,3 @@ if [ "${USE_SCCACHE}" = "true" ]; then
     echo "=== UCX build complete - sccache stats ==="
     sccache --show-stats
 fi
-
-echo "${UCX_PREFIX}/lib" > /etc/ld.so.conf.d/ucx.conf && ldconfig
