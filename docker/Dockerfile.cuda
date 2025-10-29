@@ -220,6 +220,7 @@ ENV LANG="C.UTF-8" \
     UV_CONSTRAINT="/tmp/constraints.txt" \
     VIRTUAL_ENV="/opt/vllm" \
     NVSHMEM_PREFIX="/opt/nvshmem-${NVSHMEM_VERSION}" \
+    EFA_PREFIX="/opt/amazon/efa" \
     CUDA_HOME="/usr/local/cuda"
 
 ENV LD_LIBRARY_PATH="${EFA_PREFIX}/lib:${EFA_PREFIX}/lib64:\
