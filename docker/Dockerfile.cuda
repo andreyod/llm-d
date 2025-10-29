@@ -85,7 +85,6 @@ RUN export UV_INSTALL_DIR=/usr/local/bin && \
     uv pip install --no-cache -U wheel meson-python ninja pybind11 build
 
 ENV NVSHMEM_PREFIX="/opt/nvshmem-${NVSHMEM_VERSION}" \
-    GDRCOPY_PREFIX="/opt/gdrcopy" \
     EFA_PREFIX="/opt/amazon/efa" \
     UCX_PREFIX="/opt/ucx" \
     NIXL_PREFIX="/opt/nixl" \
@@ -246,7 +245,7 @@ COPY --from=builder /opt/amazon/efa /opt/amazon/efa/
 
 # Copy gdrcopy libraries from builder
 # Install to /usr/local/lib (always present) and multiarch lib dir
-COPY --from=builder /opt/gdrcopy/lib/libgdrapi.so* /usr/local/lib/
+COPY --from=builder /usr/local/lib/libgdrapi.so* /usr/local/lib/
 # Copy from builder's multiarch directory to runtime's matching directory
 RUN if [ "${TARGETOS:-rhel}" = "ubuntu" ]; then \
         if [ "${TARGETPLATFORM:-linux/amd64}" = "linux/arm64" ]; then \

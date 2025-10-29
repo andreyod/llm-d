@@ -45,7 +45,8 @@ git checkout -q "${GDRCOPY_VERSION}"
 if [ "${USE_SCCACHE}" = "true" ]; then
     export CC="sccache gcc" CXX="sccache g++"
 fi
-ARCH="${UUARCH}" PREFIX="${GDRCOPY_PREFIX}" DESTLIB="${GDRCOPY_PREFIX}/lib" make lib_install
+
+ARCH="${UUARCH}" PREFIX=/usr/local DESTLIB=/usr/local/lib make lib_install
 
 cp src/libgdrapi.so.2.* "${LIBDIR}/"
 # also stage in /tmp for runtime stage to copy

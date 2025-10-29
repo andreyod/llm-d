@@ -36,7 +36,7 @@ fi
     --with-cuda="${CUDA_HOME}" \
     --with-verbs \
     --with-dm \
-    --with-gdrcopy=${GDRCOPY_PREFIX} \
+    --with-gdrcopy="/usr/local" \
     --with-efa \
     --enable-mt
 
