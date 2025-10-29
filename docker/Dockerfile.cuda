@@ -67,7 +67,7 @@ RUN --mount=type=secret,id=subman_org \
 COPY docker/scripts/cuda/builder/install-cmake.sh /tmp/install-cmake.sh
 ARG CMAKE_VERSION="3.19.3"
 RUN --mount=type=cache,target=/var/cache/git \
-    /tmp/install-cmake.sh \
+    /tmp/install-cmake.sh && \
     rm -f /tmp/install-cmake.sh
 
 # Install sccache (after base packages which include curl and openssl-devel)
@@ -87,20 +87,19 @@ RUN export UV_INSTALL_DIR=/usr/local/bin && \
 ENV NVSHMEM_PREFIX="/opt/nvshmem-${NVSHMEM_VERSION}" \
     EFA_PREFIX="/opt/amazon/efa" \
     UCX_PREFIX="/opt/ucx" \
-    NIXL_PREFIX="/opt/nixl" \
-    PATH="${NVSHMEM_PREFIX}/bin:${VIRTUAL_ENV}/bin:${PATH}" \
+    NIXL_PREFIX="/opt/nixl"
+    
+ENV PATH="${NVSHMEM_PREFIX}/bin:${VIRTUAL_ENV}/bin:${PATH}" \
     LIBRARY_PATH="${EFA_PREFIX}/lib:${EFA_PREFIX}/lib64:${UCX_PREFIX}/lib:${UCX_PREFIX}/lib64:${NVSHMEM_PREFIX}/lib:${NVSHMEM_PREFIX}/lib64:${CUDA_HOME}/lib64:/usr/local/lib:/usr/local/lib64" \
     CPATH="${NVSHMEM_PREFIX}/include:/usr/include:/usr/local/include:${CUDA_HOME}/include:${CPATH}" \
-    PKG_CONFIG_PATH="${UCX_PREFIX}/lib/pkgconfig:${UCX_PREFIX}/lib64/pkgconfig:${EFA_PREFIX}/lib/pkgconfig:${EFA_PREFIX}/lib64/pkgconfig:\
-/usr/local/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig:\
-/usr/lib64/pkgconfig:/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig:${PKG_CONFIG_PATH}"
+    PKG_CONFIG_PATH="${UCX_PREFIX}/lib/pkgconfig:${UCX_PREFIX}/lib64/pkgconfig:${EFA_PREFIX}/lib/pkgconfig:${EFA_PREFIX}/lib64/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/aarch64-linux-gnu/pkgconfig:/usr/lib64/pkgconfig:/usr/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig:${PKG_CONFIG_PATH}"
 
 # Install EFA
 COPY docker/scripts/cuda/common/package-utils.sh /tmp/package-utils.sh
 COPY docker/scripts/cuda/builder/install-efa.sh /tmp/install-efa.sh
 RUN --mount=type=secret,id=subman_org \
     --mount=type=secret,id=subman_activation_key \
-    TARGETOS=${TARGETOS} /tmp/install-efa.sh \
+    TARGETOS=${TARGETOS} /tmp/install-efa.sh && \
     rm -f /tmp/install-efa.sh /tmp/package-utils.sh
 
 # Build and install gdrcopy
@@ -115,12 +114,13 @@ RUN --mount=type=cache,target=/var/cache/git \
 
 # Build UCX
 ARG UCX_REPO="https://github.com/openucx/ucx.git"
-ARG UCX_VERSION="7ec95b95e524a87e81cac92f5ca8523e3966b16b"
+# ARG UCX_VERSION="7ec95b95e524a87e81cac92f5ca8523e3966b16b"
+ARG UCX_VERSION="v1.19.0"
 COPY docker/scripts/cuda/builder/build-ucx.sh /tmp/build-ucx.sh
 RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
-    /tmp/build-ucx.sh \
+    /tmp/build-ucx.sh && \
     rm -f /tmp/build-ucx.sh
 
 # Build NVSHMEM
@@ -133,11 +133,8 @@ COPY docker/scripts/cuda/builder/build-nvshmem.sh /tmp/build-nvshmem.sh
 RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
-    /tmp/build-nvshmem.sh \
+    /tmp/build-nvshmem.sh && \
     rm -f /tmp/build-nvshmem.sh
-
-ENV CPPFLAGS="-I${EFA_PREFIX}/include -I${NVSHMEM_DIR}/include ${CPPFLAGS}" \
-    LDFLAGS="-Wl,-rpath,${EFA_PREFIX}/lib -L${NVSHMEM_DIR}/lib ${LDFLAGS}"
 
 # Pin torch, so all deps are built against the same version
 # as vllm itself
@@ -145,7 +142,8 @@ ENV CPPFLAGS="-I${EFA_PREFIX}/include -I${NVSHMEM_DIR}/include ${CPPFLAGS}" \
 RUN --mount=type=cache,target=/root/.cache/uv \
   . ${VIRTUAL_ENV}/bin/activate && \
   uv pip install \
-    numpy torch \
+    numpy \
+    torch \
     pyyaml \
     types-PyYAML \
     pytest \
@@ -159,8 +157,8 @@ COPY docker/scripts/cuda/builder/build-nixl.sh /tmp/build-nixl.sh
 RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
-    echo "busting cache" > /tmp/busting-cache-1.log \
-    /tmp/build-nixl.sh \
+    echo "busting cache" > /tmp/busting-cache-1.log && \
+    /tmp/build-nixl.sh && \
     rm -f /tmp/build-nixl.sh
 
 RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
@@ -219,28 +217,28 @@ ARG BUILD_NIXL_FROM_SOURCE="true"
 
 COPY docker/constraints.txt /tmp/constraints.txt
 
-ENV LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8 \
-    PYTHON_VERSION=${PYTHON_VERSION:-3.12} \
-    UV_TORCH_BACKEND=${UV_TORCH_BACKEND:-cu${CUDA_MAJOR}${CUDA_MINOR}} \
-    UV_CONSTRAINT=/tmp/constraints.txt \
-    VIRTUAL_ENV=/opt/vllm \
+ENV LANG="C.UTF-8" \
+    LC_ALL="C.UTF-8" \
+    PYTHON_VERSION="${PYTHON_VERSION}" \
+    UV_TORCH_BACKEND="${UV_TORCH_BACKEND:-cu${CUDA_MAJOR}${CUDA_MINOR}}" \
+    UV_CONSTRAINT="/tmp/constraints.txt" \
+    VIRTUAL_ENV="/opt/vllm" \
     NVSHMEM_PREFIX="/opt/nvshmem-${NVSHMEM_VERSION}" \
-    # LD_LIBRARY_PATH needs the torch path to apply proper linkers so as not to produce torch ABI missmatch
-    LD_LIBRARY_PATH="/opt/vllm/lib64/python${PYTHON_VERSION}/site-packages/torch/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/lib64:/usr/lib64/nvshmem/${CUDA_MAJOR}:/usr/lib/x86_64-linux-gnu/nvshmem/${CUDA_MAJOR}:/usr/lib/aarch64-linux-gnu/nvshmem/${CUDA_MAJOR}:${LD_LIBRARY_PATH}" \
+    CUDA_HOME="/usr/local/cuda" \
+    LD_LIBRARY_PATH="${EFA_PREFIX}/lib:${EFA_PREFIX}/lib64:${UCX_PREFIX}/lib:${UCX_PREFIX}/lib64:/opt/vllm/lib64/python${PYTHON_VERSION}/site-packages/torch/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:${CUDA_HOME}/lib64:/usr/local/lib:/usr/local/lib64:/usr/lib64/nvshmem/${CUDA_MAJOR}:/usr/lib/x86_64-linux-gnu/nvshmem/${CUDA_MAJOR}:/usr/lib/aarch64-linux-gnu/nvshmem/${CUDA_MAJOR}:${LD_LIBRARY_PATH}:usr/lib/x86_64-linux-gnu/" \
     PATH="${NVSHMEM_PREFIX}/bin:${PATH}" \
     CPATH="${NVSHMEM_PREFIX}/include:${CPATH}" \
-    TORCH_CUDA_ARCH_LIST="9.0a;10.0+PTX"
+    TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0;9.0a;10.0+PTX"
 
 # Install runtime dependencies
 COPY docker/scripts/cuda/common/package-utils.sh /tmp/package-utils.sh
 COPY docker/packages /tmp/packages
 COPY docker/scripts/cuda/runtime/install-runtime-packages.sh /tmp/install-runtime-packages.sh
-RUN chmod +x /tmp/install-runtime-packages.sh && \
-    TARGETOS=${TARGETOS} /tmp/install-runtime-packages.sh && \
+RUN TARGETOS=${TARGETOS} /tmp/install-runtime-packages.sh && \
     rm -f /tmp/install-runtime-packages.sh /tmp/package-utils.sh && \
     rm -rf /tmp/packages
 
+# Copy in efa
 COPY --from=builder /opt/amazon/efa /opt/amazon/efa/
 
 # Copy gdrcopy libraries from builder
@@ -258,6 +256,15 @@ RUN if [ "${TARGETOS:-rhel}" = "ubuntu" ]; then \
     fi && \
     mkdir -p "${LIBDIR}"
 COPY --from=builder /tmp/gdrcopy_libs /tmp/
+
+# Copy UCX libraries from builder
+COPY --from=builder /opt/ucx/lib/libucp* /usr/local/lib/
+COPY --from=builder /opt/ucx/lib/libucs* /usr/local/lib/
+COPY --from=builder /opt/ucx/lib/libuct* /usr/local/lib/
+COPY --from=builder /opt/ucx/lib/libucm* /usr/local/lib/
+COPY --from=builder /opt/ucx/lib /usr/local/lib/ucx/
+COPY --from=builder /opt/ucx/lib*/libucx*.so* /usr/local/lib/
+
 RUN if [ -d /tmp/gdrcopy_libs ]; then \
         if [ "${TARGETOS:-rhel}" = "ubuntu" ]; then \
             if [ "${TARGETPLATFORM:-linux/amd64}" = "linux/arm64" ]; then \
@@ -274,20 +281,22 @@ RUN if [ -d /tmp/gdrcopy_libs ]; then \
 # Copy compiled NVSHMEM libraries from builder
 COPY --from=builder /opt/nvshmem-${NVSHMEM_VERSION}/ /opt/nvshmem-${NVSHMEM_VERSION}/
 
-# Copy UCX libraries from builder
-COPY --from=builder /opt/ucx/lib/libucp* /usr/local/lib/
-COPY --from=builder /opt/ucx/lib/libucs* /usr/local/lib/
-COPY --from=builder /opt/ucx/lib/libuct* /usr/local/lib/
-COPY --from=builder /opt/ucx/lib/libucm* /usr/local/lib/
-COPY --from=builder /opt/ucx/lib /usr/local/lib/ucx/
-COPY --from=builder /opt/ucx/lib*/libucx*.so* /usr/local/lib/
-
-COPY --from=builder /opt/nixl/lib64/libnixl* /usr/local/lib64/
-COPY --from=builder /opt/nixl/lib64/libstream.so /usr/local/lib64/
-COPY --from=builder /opt/nixl/lib64/libserdes.so /usr/local/lib64/
-COPY --from=builder /opt/nixl/lib64/plugins/ /usr/local/lib64/plugins/
-COPY --from=builder /opt/nixl/include/nixl* /usr/local/include/
-
+COPY --from=builder /opt/nixl /opt/nixl
+RUN if [ -d /opt/nixl/include ]; then \
+        cp -a /opt/nixl/include/nixl* /usr/local/include/ || true; \
+    fi; \
+    if [ -d /opt/nixl/lib ]; then \
+        if [ "${TARGETOS:-rhel}" = "ubuntu" ]; then \
+            if [ "${TARGETPLATFORM:-linux/amd64}" = "linux/arm64" ]; then \
+                cp -a /opt/nixl/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu/ || true; \
+            else \
+                cp -a /opt/nixl/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/ || true; \
+            fi; \
+        else \
+            cp -a /opt/nixl/lib64/ /usr/lib64/ || true; \
+        fi; \
+    fi; \
+    rm -rf /opt/nixl
 
 # Setup ldconfig and library paths
 RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
