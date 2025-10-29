@@ -46,7 +46,7 @@ env:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true # use for faster dev - REMOVE ME LATER
+  # cancel-in-progress: true # use for faster dev - REMOVE ME LATER
 
 jobs:
   pre-commit:
@@ -214,7 +214,7 @@ jobs:
           target: runtime
           platforms: ${{ matrix.platform }}
           push: true
-          provenance: true
+          provenance: false
           build-args: |
             TARGETOS=${{ matrix.os }}
             BUILD_BASE_IMAGE_SUFFIX=${{ matrix.os == 'ubuntu' && 'ubuntu20.04' || matrix.base_image_suffix }}
@@ -234,6 +234,15 @@ jobs:
         env:
           DOCKER_BUILDKIT: "1"
           BUILDKIT_PROGRESS: "plain"
+
+      - name: Verify remote digest exists
+        if: ${{ steps.build-image-final-layer.outputs.digest != '' }}
+        run: |
+          set -x
+          digest="${{ steps.build-image-final-layer.outputs.digest }}"
+          ref="${{ env.REGISTRY }}/${{ github.repository }}-cuda-dev${{ matrix.image_suffix }}@${digest}"
+          echo "Checking remote ref: $ref"
+          docker buildx imagetools inspect "$ref" >/dev/null
 
       - name: Export digest
         run: |
