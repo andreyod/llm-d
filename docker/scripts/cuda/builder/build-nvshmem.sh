@@ -74,7 +74,7 @@ ninja -j"$(nproc)"
 ninja install
 
 # copy python wheel to /wheels
-cp "${NVSHMEM_PREFIX}"/lib/python/dist/nvshmem4py_cu"${CUDA_MAJOR}"-*-cp"${PYTHON_VERSION/./}"-cp"${PYTHON_VERSION/./}"-manylinux_*.whl /wheels/
+cp "${NVSHMEM_PREFIX}"/lib/python/dist/nvshmem4py_cu"${CUDA_MAJOR}"-*-cp"${PYTHON_VERSION/./}"-cp"${PYTHON_VERSION/./}"-manylinux*.whl /wheels/
 
 cd /tmp
 rm -rf nvshmem_src*

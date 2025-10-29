@@ -46,7 +46,7 @@ env:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  # cancel-in-progress: true # use for faster dev
+  cancel-in-progress: true # use for faster dev - REMOVE ME LATER
 
 jobs:
   pre-commit:
