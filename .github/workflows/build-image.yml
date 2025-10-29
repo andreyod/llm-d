@@ -192,8 +192,6 @@ jobs:
           build-args: |
             TARGETOS=${{ matrix.os }}
             BUILD_BASE_IMAGE_SUFFIX=${{ matrix.os == 'ubuntu' && 'ubuntu22.04' || matrix.base_image_suffix }}
-            # Testing EFA builds but should brick vLLM
-            # BUILD_BASE_IMAGE_SUFFIX=${{ matrix.os == 'ubuntu' && 'ubuntu20.04' || matrix.base_image_suffix }}
             FINAL_BASE_IMAGE_SUFFIX=${{ matrix.base_image_suffix }}
             VLLM_REPO=${{ inputs.vllm_repo || 'https://github.com/vllm-project/vllm.git' }}
             VLLM_COMMIT_SHA=${{ inputs.vllm_commit_sha || 'b8b302cde434df8c9289a2b465406b47ebab1c2d' }}
@@ -216,7 +214,7 @@ jobs:
           target: runtime
           platforms: ${{ matrix.platform }}
           push: true
-          provenance: false
+          provenance: true
           build-args: |
             TARGETOS=${{ matrix.os }}
             BUILD_BASE_IMAGE_SUFFIX=${{ matrix.os == 'ubuntu' && 'ubuntu22.04' || matrix.base_image_suffix }}
@@ -229,9 +227,9 @@ jobs:
           cache-to: |
             type=gha,mode=max,scope=cuda-dev-${{ matrix.os }}-${{ matrix.platform == 'linux/arm64' && 'arm64' || 'amd64' }}
           labels: ${{ steps.meta.outputs.labels }}
-          tags: ${{ steps.meta.outputs.tags }}
-          outputs: |
-            type=image,name=${{ env.REGISTRY }}/${{ github.repository }}-cuda-dev${{ matrix.image_suffix }},push-by-digest=true,name-canonical=true,push=true
+          outputs: >-
+            type=image,name=${{ env.REGISTRY }}/${{ github.repository }}-cuda-dev${{ matrix.image_suffix }},
+            push-by-digest=true,name-canonical=true,push=true
           github-token: ${{ secrets.GHCR_TOKEN }}
         env:
           DOCKER_BUILDKIT: "1"

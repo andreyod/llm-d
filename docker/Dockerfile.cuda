@@ -19,9 +19,6 @@ ARG PYTHON_VERSION=3.12
 # ============================================================================
 FROM nvcr.io/nvidia/cuda:${CUDA_MAJOR}.${CUDA_MINOR}.${CUDA_PATCH}-devel-${BUILD_BASE_IMAGE_SUFFIX} AS builder
 
-ARG BUST_CACHE=true
-RUN date +%Y%M%H%M%S > /tmp/ci-datestamp
-
 ARG TARGETPLATFORM
 ARG TARGETOS=rhel
 ARG BUILD_BASE_IMAGE_SUFFIX=ubi9
@@ -46,7 +43,7 @@ ENV LANG="C.UTF-8" \
     UV_HTTP_TIMEOUT="500" \
     UV_INDEX_STRATEGY="unsafe-best-match" \
     UV_LINK_MODE="copy" \
-    TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0;9.0a;10.0+PTX" \
+    TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9;9.0;9.0a;10.0;12.0+PTX" \
     PYTHON_VERSION="${PYTHON_VERSION}" \
     UV_TORCH_BACKEND="${UV_TORCH_BACKEND:-cu${CUDA_MAJOR}${CUDA_MINOR}}" \
     UV_BUILD_CONSTRAINT="/tmp/build-constraints.txt" \
@@ -58,8 +55,6 @@ ENV LANG="C.UTF-8" \
 COPY docker/scripts/cuda/common/package-utils.sh /tmp/package-utils.sh
 COPY docker/packages /tmp/packages
 COPY docker/scripts/cuda/builder/install-base-packages.sh /tmp/install-base-packages.sh
-# Layer invalidation for package changes
-RUN echo $(cat /tmp/packages/common/builder-packages.json)
 RUN --mount=type=secret,id=subman_org \
     --mount=type=secret,id=subman_activation_key \
     TARGETOS=${TARGETOS} /tmp/install-base-packages.sh && \
@@ -190,7 +185,7 @@ ARG DEEPEP_VERSION="v1.2.1"
 ARG DEEPGEMM_REPO="https://github.com/deepseek-ai/DeepGEMM"
 ARG DEEPGEMM_VERSION="v2.1.0"
 ARG PPLX_KERNELS_REPO="https://github.com/perplexityai/pplx-kernels"
-ARG PPLX_KERNELS_VERSION="12cecfda252e4e646417ac263d96e994d476ee5d"
+ARG PPLX_KERNELS_VERSION="2bd6e30fab358829bd01d1c0907be8088ff9e5e1"
 ARG FLASHINFER_REPO="https://github.com/flashinfer-ai/flashinfer.git"
 ARG FLASHINFER_VERSION="v0.3.1"
 
@@ -229,7 +224,7 @@ ENV LANG="C.UTF-8" \
     LD_LIBRARY_PATH="${EFA_PREFIX}/lib:${EFA_PREFIX}/lib64:${UCX_PREFIX}/lib:${UCX_PREFIX}/lib64:/opt/vllm/lib64/python${PYTHON_VERSION}/site-packages/torch/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:${CUDA_HOME}/lib64:/usr/local/lib:/usr/local/lib64:/usr/lib64/nvshmem/${CUDA_MAJOR}:/usr/lib/x86_64-linux-gnu/nvshmem/${CUDA_MAJOR}:/usr/lib/aarch64-linux-gnu/nvshmem/${CUDA_MAJOR}:${LD_LIBRARY_PATH}:usr/lib/x86_64-linux-gnu/" \
     PATH="${NVSHMEM_PREFIX}/bin:${PATH}" \
     CPATH="${NVSHMEM_PREFIX}/include:${CPATH}" \
-    TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0;9.0a;10.0+PTX"
+    TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9;9.0;9.0a;10.0;12.0+PTX"
 
 # Install runtime dependencies
 COPY docker/scripts/cuda/common/package-utils.sh /tmp/package-utils.sh
