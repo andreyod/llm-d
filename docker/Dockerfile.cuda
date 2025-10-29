@@ -280,9 +280,14 @@ COPY --from=builder /opt/ucx/lib/libucs* /usr/local/lib/
 COPY --from=builder /opt/ucx/lib/libuct* /usr/local/lib/
 COPY --from=builder /opt/ucx/lib/libucm* /usr/local/lib/
 COPY --from=builder /opt/ucx/lib /usr/local/lib/ucx/
-
-# need to deal with this one with pathing between ubuntu and rhel
 COPY --from=builder /opt/ucx/lib*/libucx*.so* /usr/local/lib/
+
+COPY --from=builder /opt/nixl/lib64/libnixl* /usr/local/lib64/
+COPY --from=builder /opt/nixl/lib64/libstream.so /usr/local/lib64/
+COPY --from=builder /opt/nixl/lib64/libserdes.so /usr/local/lib64/
+COPY --from=builder /opt/nixl/lib64/plugins/ /usr/local/lib64/plugins/
+COPY --from=builder /opt/nixl/include/nixl* /usr/local/include/
+
 
 # Setup ldconfig and library paths
 RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
