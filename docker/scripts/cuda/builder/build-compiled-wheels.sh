@@ -18,6 +18,10 @@ set -Eeu
 # - USE_SCCACHE: whether to use sccache (true/false)
 # - TARGETPLATFORM: Docker buildx platform (e.g., linux/amd64, linux/arm64)
 
+echo "BEGIN COMPILED WHEEL BUILDS LOGGING"
+
+set -x
+
 cd /tmp
 
 . "${VIRTUAL_ENV}/bin/activate"
@@ -55,17 +59,12 @@ uv build --wheel --no-build-isolation --out-dir /wheels
 cd ..
 rm -rf deepgemm
 
-# build pplx-kernels wheel (skip on ARM64)
-if [ "${TARGETPLATFORM}" != "linux/arm64" ]; then
-    git clone "${PPLX_KERNELS_REPO}" pplx-kernels
-    cd pplx-kernels
-    git checkout "${PPLX_KERNELS_VERSION}"
-    uv build --wheel --out-dir /wheels
-    cd ..
-    rm -rf pplx-kernels
-else
-    echo "Skipping pplx-kernels build on ARM64"
-fi
+git clone "${PPLX_KERNELS_REPO}" pplx-kernels
+cd pplx-kernels
+git checkout "${PPLX_KERNELS_VERSION}"
+uv build --wheel --no-build-isolation --out-dir /wheels
+cd ..
+rm -rf pplx-kernels
 
 if [ "${USE_SCCACHE}" = "true" ]; then
     echo "=== Compiled wheels build complete - sccache stats ==="

@@ -19,6 +19,9 @@ ARG PYTHON_VERSION=3.12
 # ============================================================================
 FROM nvcr.io/nvidia/cuda:${CUDA_MAJOR}.${CUDA_MINOR}.${CUDA_PATCH}-devel-${BUILD_BASE_IMAGE_SUFFIX} AS builder
 
+ARG BUST_CACHE=true
+RUN date +%Y%M%H%M%S > /tmp/ci-datestamp
+
 ARG TARGETPLATFORM
 ARG TARGETOS=rhel
 ARG BUILD_BASE_IMAGE_SUFFIX=ubi9
@@ -63,9 +66,8 @@ RUN --mount=type=secret,id=subman_org \
     rm -f /tmp/install-base-packages.sh /tmp/package-utils.sh && \
     rm -rf /tmp/packages
 
-# install cmake 3.19.3 for consistency between ubuntu22.04 and rhel9
+# install cmake from script for consistency between ubuntu22.04 and rhel9
 COPY docker/scripts/cuda/builder/install-cmake.sh /tmp/install-cmake.sh
-ARG CMAKE_VERSION="3.19.3"
 RUN --mount=type=cache,target=/var/cache/git \
     /tmp/install-cmake.sh && \
     rm -f /tmp/install-cmake.sh
@@ -152,12 +154,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Decide to build NIXL from source. If set to false, NIXL will be installed as a dependency of vLLM in the `install-vllm.sh` script, and the `build-nixl.sh` script will be a NoOp.
 ARG BUILD_NIXL_FROM_SOURCE="true"
 ARG NIXL_REPO="https://github.com/ai-dynamo/nixl.git"
-ARG NIXL_VERSION="f62d1d7d6bf3353924680e4e2c8b2ac1a2f69d0d"
+ARG NIXL_VERSION="0.7.0"
 COPY docker/scripts/cuda/builder/build-nixl.sh /tmp/build-nixl.sh
 RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
-    echo "busting cache" > /tmp/busting-cache-1.log && \
     /tmp/build-nixl.sh && \
     rm -f /tmp/build-nixl.sh
 
@@ -167,10 +168,10 @@ RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
 
 WORKDIR /workspace
 
-ARG LMCACHE_REPO=https://github.com/LMCache/LMCache.git
-ARG LMCACHE_VERSION="v0.3.8"
 ARG INFINISTORE_REPO="https://github.com/bytedance/InfiniStore.git"
 ARG INFINISTORE_VERSION="0.2.33"
+ARG LMCACHE_REPO="https://github.com/LMCache/LMCache.git"
+ARG LMCACHE_VERSION="v0.3.8"
 COPY docker/scripts/cuda/builder/build-lmcache.sh /tmp/build-lmcache.sh
 RUN --mount=type=cache,target=/var/cache/git \
     --mount=type=secret,id=aws_access_key_id \
