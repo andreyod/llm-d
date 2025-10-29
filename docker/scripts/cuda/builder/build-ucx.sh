@@ -25,6 +25,12 @@ if [ "${USE_SCCACHE}" = "true" ]; then
     export CC="sccache gcc" CXX="sccache g++" 
 fi
 
+# Ubuntu image needs to be built against Ubuntu 20.04 and EFA only supports 22.04 and 24.04.
+EFA_FLAG=""
+if [ "$TARGETOS" = "rhel" ]; then
+    EFA_FLAG="--with-efa"
+fi
+
 ./autogen.sh 
 ./contrib/configure-release \
     --prefix="${UCX_PREFIX}" \
@@ -37,7 +43,7 @@ fi
     --with-verbs \
     --with-dm \
     --with-gdrcopy="/usr/local" \
-    --with-efa \
+    "${EFA_FLAG}" \
     --enable-mt
 
 make -j$(nproc) 

@@ -40,6 +40,15 @@ fi
 
 mkdir -p build && cd build
 
+# Ubuntu image needs to be built against Ubuntu 20.04 and EFA only supports 22.04 and 24.04.
+EFA_FLAGS=("")
+if [ "$TARGETOS" = "rhel" ]; then
+    EFA_FLAGS=(
+        -DNVSHMEM_LIBFABRIC_SUPPORT=1
+        -DLIBFABRIC_HOME="${EFA_PREFIX}"
+    )
+fi
+
 cmake \
     -G Ninja \
     -DNVSHMEM_PREFIX="${NVSHMEM_PREFIX}" \
@@ -58,8 +67,7 @@ cmake \
     -DNVSHMEM_USE_NCCL=0 \
     -DNVSHMEM_BUILD_TESTS=0 \
     -DNVSHMEM_BUILD_EXAMPLES=0 \
-    -DNVSHMEM_LIBFABRIC_SUPPORT=1 \
-    -DLIBFABRIC_HOME="${EFA_PREFIX}" \
+    ${EFA_FLAGS[@]} \
     ..
 
 ninja -j"$(nproc)"

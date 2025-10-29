@@ -11,6 +11,11 @@ set -Eeu
 # - TARGETOS: Target OS - either 'ubuntu' or 'rhel' (default: rhel)
 # - EFA_PREFIX: Path to include ld linkers to ensure that UCX and NVSHMEM can build against EFA and Libfacbric successfully
 
+if [ "$TARGETOS" = "ubuntu" ]; then
+    echo "Ubuntu image needs to be built against Ubuntu 20.04 and EFA only supports 22.04 and 24.04."
+    exit 0
+fi
+
 TARGETOS="${TARGETOS:-rhel}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

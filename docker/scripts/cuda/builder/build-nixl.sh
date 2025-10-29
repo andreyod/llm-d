@@ -31,11 +31,17 @@ if [ "${USE_SCCACHE}" = "true" ]; then
     export CC="sccache gcc" CXX="sccache g++" NVCC="sccache nvcc"
 fi
 
+# Ubuntu image needs to be built against Ubuntu 20.04 and EFA only supports 22.04 and 24.04.
+EFA_FLAG=""
+if [ "$TARGETOS" = "rhel" ]; then
+    EFA_FLAG="-Dlibfabric_path=${EFA_PREFIX}"
+fi
+
 meson setup build \
     --prefix="${NIXL_PREFIX}" \
     -Dbuildtype=release \
     -Ducx_path="${UCX_PREFIX}" \
-    -Dlibfabric_path="${EFA_PREFIX}" \
+    "${EFA_FLAG}" \
     -Dinstall_headers=true
 
 cd build
