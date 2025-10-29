@@ -12,10 +12,6 @@
     "gcc": "gcc"
   },
   "ubuntu_only": [
-    "hwloc",
-    "python3.10",
-    "python3.10-venv",
-    "python3-wheel",
-    "python3.10-dev"
+    "hwloc"
   ]
 }
