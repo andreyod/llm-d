@@ -17,19 +17,13 @@ set -Eeu
 VLLM_PRECOMPILED_WHEEL_COMMIT="${VLLM_PRECOMPILED_WHEEL_COMMIT:-${VLLM_COMMIT_SHA}}"
 
 # build list of packages to install
-if [ "${BUILD_NIXL_FROM_SOURCE}" = "true" ]; then
-  INSTALL_PACKAGES=(
-    cuda-python
-    'huggingface_hub[hf_xet]'
-    /tmp/wheels/*.whl
-  )
-else
-  INSTALL_PACKAGES=(
-    nixl
-    cuda-python
-    'huggingface_hub[hf_xet]'
-    /tmp/wheels/*.whl
-  )
+INSTALL_PACKAGES=(
+  cuda-python
+  'huggingface_hub[hf_xet]'
+  /tmp/wheels/*.whl
+)
+if [ "${BUILD_NIXL_FROM_SOURCE}" = "false" ]; then
+  INSTALL_PACKAGES+=(nixl)
 fi
 
 # clone vllm repository
@@ -47,7 +41,9 @@ echo "DEBUG: Architecture: $(uname -m), Python: $(python3 --version)"
 MACHINE=$(uname -m)
 case "${MACHINE}" in
   x86_64) PLATFORM_TAG="manylinux1_x86_64" ;;
+  amd64) PLATFORM_TAG="manylinux1_x86_64" ;;
   aarch64) PLATFORM_TAG="manylinux2014_aarch64" ;;
+  arm64) PLATFORM_TAG="manylinux2014_aarch64" ;;
   *) echo "unsupported architecture: ${MACHINE}"; exit 1 ;;
 esac
 
