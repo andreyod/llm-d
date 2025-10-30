@@ -13,6 +13,7 @@ set -Eeu
 
 if [ "$TARGETOS" = "ubuntu" ]; then
     echo "Ubuntu image needs to be built against Ubuntu 20.04 and EFA only supports 22.04 and 24.04."
+    mkdir -p "${EFA_PREFIX}"
     exit 0
 fi
 

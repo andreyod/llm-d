@@ -46,7 +46,6 @@ env:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  # cancel-in-progress: true # use for faster dev - REMOVE ME LATER
 
 jobs:
   pre-commit:
@@ -121,6 +120,7 @@ jobs:
   cuda-build-llm-d:
     needs: [detect-changes]
     if: ${{ needs.detect-changes.outputs.cuda == 'true' }}
+    continue-on-error: true
     strategy:
       fail-fast: false
       # multi-OS build matrix: creates 4 images (2 platforms × 2 OS variants)
@@ -153,6 +153,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Export Shortened Git SHA
+        id: export-git-sha
+        run: |
+          echo "SHORTSHA=$(git rev-parse --short=7 HEAD)" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -258,8 +263,32 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  cuda-manifest:
+  cuda-success-check:
     needs: cuda-build-llm-d
+    if: ${{ always() }}                # run even if some/all legs failed
+    runs-on: ubuntu-latest
+    outputs:
+      any_succeeded: ${{ steps.check.outputs.any_succeeded }}
+    steps:
+      - name: Download all digests (best-effort)
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: "*"
+          merge-multiple: true
+        continue-on-error: true
+
+      - id: check
+        shell: bash
+        run: |
+          shopt -s nullglob
+          all=(/tmp/digests/*)
+          any=false; [ ${#all[@]} -gt 0 ] && any=true
+          echo "any_succeeded=${any}"   >> "$GITHUB_OUTPUT"
+
+  cuda-manifest:
+    needs: [cuda-build-llm-d, cuda-success-check]
+    if: ${{ needs.cuda-success-check.outputs.any_succeeded == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -314,7 +343,7 @@ jobs:
         id: manifest
         working-directory: /tmp/digests
         run: |
-          SHORT_SHA=${GITHUB_SHA:0:7}
+          SHORT_SHA="${{ steps.export-git-sha.outputs.SHORTSHA }}"
           # build the list of source images (by digest)
           sources=""
           for digest in *; do
