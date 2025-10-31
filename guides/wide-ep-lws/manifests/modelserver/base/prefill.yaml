@@ -25,7 +25,7 @@ spec:
               sizeLimit: 3Gi # roughly 32MB per local DP plus scratch space
         containers:
         - name: vllm-worker
-          image: quay.io/tms/llm-d-dev:nightly
+          image: "quay.io/tms/llm-d-dev:nightly"
           securityContext:
             capabilities:
               add:

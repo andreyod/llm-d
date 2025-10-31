@@ -42,7 +42,7 @@ spec:
               sizeLimit: 3Gi # roughly 32MB per local DP plus scratch space
         containers:
         - name: vllm-worker
-          image: quay.io/tms/llm-d-dev:nightly
+          image: "quay.io/tms/llm-d-dev:nightly-0384aa7150c4c9778efca041ffd1beb3ad2bd694"
           securityContext:
             capabilities:
               add:
@@ -59,6 +59,9 @@ spec:
               # Clear /dev/shm on start to prevent running out of space when crashes occur
               # https://github.com/llm-d/llm-d/issues/352
               find /dev/shm -type f -delete
+
+
+              sleep infinity
 
               #################
               # RUN vLLM decode worker
@@ -110,6 +113,8 @@ spec:
           # Has no effect when VLLM_ALL2ALL_BACKEND=deepep_high_throughput.
           - name: VLLM_MOE_DP_CHUNK_SIZE
             value: "512" # vLLM default is 256
+          - name: VLLM_MOE_ROUTING_SIMULATION_STRATEGY
+            value: "uniform_random" # Always set this when using the DecodeBenchConnector so we get sane routing
           - name: DP_SIZE_LOCAL
             value: "8"
           - name: TP_SIZE
@@ -126,6 +131,10 @@ spec:
             value: deepep_low_latency
           - name: NVIDIA_GDRCOPY
             value: enabled
+          - name: NVSHMEM_INFO
+            value: "true"
+          - name: NVSHMEM_DEBUG
+            value: "INFO"
           - name: NVSHMEM_REMOTE_TRANSPORT
             value: ibgda
           - name: NVSHMEM_IB_ENABLE_IBGDA
