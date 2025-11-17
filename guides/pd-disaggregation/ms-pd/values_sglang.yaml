@@ -1,0 +1,213 @@
+multinode: false
+
+modelArtifacts:
+  uri: "hf://Qwen/Qwen3-VL-4B-Instruct"
+  size: 100Gi
+  authSecretName: "llm-d-hf-token"
+  name: "Qwen/Qwen3-VL-4B-Instruct"
+
+routing:
+  servicePort: 8000
+  proxy:
+    image: quay.io/andreyo/llmd/llm-d-routing-sidecar:dev
+    connector: sglang
+    debugLevel: 5
+    secure: false
+
+  inferencePool:
+    create: false
+
+  httpRoute:
+    create: false
+
+  epp:
+    create: false
+
+decode:
+  parallelism:
+    tensor: 4
+    data: 1
+  create: true
+  replicas: 1
+  monitoring:
+    podmonitor:
+      enabled: true
+      portName: "metrics" # decode vLLM service port (from routing.proxy.targetPort)
+      path: "/metrics"
+      interval: "30s"
+  containers:
+  - name: "vllm"
+    image: docker.io/lmsysorg/sglang:latest
+    modelCommand: custom
+    command: ["python3", "-m", "sglang.launch_server"]
+    args:
+      # Keep tensor-parallelism as the first set of arguments
+      - "--tensor-parallel-size"
+      - "4"
+      - "--model-path"
+      - "Qwen/Qwen3-VL-4B-Instruct"
+      - "--port"
+      - "8200"
+      - "--host"
+      - "0.0.0.0"
+      - "--disaggregation-mode"
+      - "decode"
+      - "--log-level"
+      - "debug"
+      - "--enable-metrics"
+      - "--log-requests"
+      - "--log-requests-level"
+      - "3"
+    env:
+      - name: TRITON_CACHE_DIR
+        value: /.cache
+      - name: VLLM_NIXL_SIDE_CHANNEL_HOST
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+      - name: VLLM_LOGGING_LEVEL
+        value: DEBUG
+    ports:
+      - containerPort: 8200
+        name: metrics
+        protocol: TCP
+    resources:
+      limits:
+        memory: 64Gi
+        cpu: "16"
+        nvidia.com/gpu: "4"
+      requests:
+        memory: 64Gi
+        cpu: "16"
+        nvidia.com/gpu: "4"
+    mountModelVolume: true
+    volumeMounts:
+    - name: metrics-volume
+      mountPath: /.config
+    - name: shm
+      mountPath: /dev/shm
+    - name: torch-compile-cache
+      mountPath: /.cache
+    startupProbe:
+      httpGet:
+        path: /v1/models
+        port: 8200
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 60
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8200
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /v1/models
+        port: 8200
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+  volumes:
+  - name: metrics-volume
+    emptyDir: {}
+  - name: shm
+    emptyDir:
+      medium: Memory
+      sizeLimit: "16Gi"
+  - name: torch-compile-cache
+    emptyDir: {}
+
+prefill:
+  create: true
+  replicas: 4
+  monitoring:
+    podmonitor:
+      enabled: true
+      portName: "metrics" # prefill vLLM service port (from routing.servicePort)
+      path: "/metrics"
+      interval: "30s"
+  containers:
+  - name: "vllm"
+    image: docker.io/lmsysorg/sglang:latest
+    modelCommand: custom
+    command: ["python3", "-m", "sglang.launch_server"]
+    args:
+      - "--model-path"
+      - "Qwen/Qwen3-VL-4B-Instruct"
+      - "--port"
+      - "8000"
+      - "--host"
+      - "0.0.0.0"
+      - "--log-level"
+      - "--disaggregation-mode"
+      - "prefill"
+      - "--log-level"
+      - "debug"
+      - "--enable-metrics"
+      - "--log-requests"
+      - "--log-requests-level"
+      - "3"
+    env:
+      - name: TRITON_CACHE_DIR
+        value: /.cache
+      - name: VLLM_NIXL_SIDE_CHANNEL_HOST
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+      - name: VLLM_LOGGING_LEVEL
+        value: DEBUG
+    ports:
+      - containerPort: 8000
+        name: metrics
+        protocol: TCP
+    resources:
+      limits:
+        memory: 64Gi
+        cpu: "8"
+        nvidia.com/gpu: "1"
+      requests:
+        memory: 64Gi
+        cpu: "8"
+        nvidia.com/gpu: "1"
+    mountModelVolume: true
+    volumeMounts:
+    - name: metrics-volume
+      mountPath: /.config
+    - name: shm
+      mountPath: /dev/shm
+    - name: torch-compile-cache
+      mountPath: /.cache
+    startupProbe:
+      httpGet:
+        path: /v1/models
+        port: 8000
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 60
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8000
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /v1/models
+        port: 8000
+      periodSeconds: 5
+      timeoutSeconds: 2
+      failureThreshold: 3
+  volumes:
+  - name: metrics-volume
+    emptyDir: {}
+  - name: shm
+    emptyDir:
+      medium: Memory
+      sizeLimit: "16Gi"
+  - name: torch-compile-cache
+    emptyDir: {}
