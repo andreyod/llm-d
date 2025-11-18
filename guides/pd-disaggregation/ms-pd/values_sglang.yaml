@@ -141,7 +141,6 @@ prefill:
       - "8000"
       - "--host"
       - "0.0.0.0"
-      - "--log-level"
       - "--disaggregation-mode"
       - "prefill"
       - "--log-level"
