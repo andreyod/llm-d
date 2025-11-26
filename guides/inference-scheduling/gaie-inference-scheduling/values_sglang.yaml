@@ -1,0 +1,35 @@
+inferenceExtension:
+  replicas: 1
+  image:
+    # both downstream infernece-scheduler and upstream epp image can support inference-scheduling example
+    ###################
+    name: llm-d-inference-scheduler
+    hub: ghcr.io/llm-d
+    tag: v0.4.0-rc.1
+    ###################
+    # name: epp
+    # hub: registry.k8s.io/gateway-api-inference-extension
+    # tag: v1.2.0-rc.1
+    ###################
+    pullPolicy: Always
+  extProcPort: 9002
+  pluginsConfigFile: "default-plugins.yaml"
+  flags:
+    total-queued-requests-metric: "sglang:num_queue_reqs"
+    kv-cache-usage-percentage-metric: "sglang:token_usage"
+    lora-info-metric: "" # Set an empty metric to disable LoRA metric scraping as they are not supported by SGLang yet.
+    cache-info-metric: ""
+  monitoring:
+    interval: "10s"
+    # Service account token secret for authentication
+    secret:
+      name: inference-scheduling-gateway-sa-metrics-reader-secret
+    # Prometheus ServiceMonitor will be created when enabled for EPP metrics collection
+    prometheus:
+      enabled: true
+inferencePool:
+  apiVersion: inference.networking.x-k8s.io/v1alpha2 # use old API version for inference
+  targetPortNumber: 8000
+  modelServers:
+    matchLabels:
+      llm-d.ai/inferenceServing: "true"
