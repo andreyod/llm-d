@@ -127,6 +127,17 @@ accelerator:
 
 This case expects using 4th Gen Intel Xeon processors (Sapphire Rapids) or later.
 
+### Inference Server Selection
+
+By default, this well-lit path uses vLLM as the inference server for AI model serving.
+In case you want to deploy SGLang as the inference server, use:
+
+```bash
+helmfile apply -e sglang -n ${NAMESPACE}
+```
+
+**_NOTE:_** Currently you can use this option only with the default gateway and hardware (i.e., `Istio` gateway and `GPU` hardware).
+
 ### Install HTTPRoute When Using Gateway option
 
 Follow provider specific instructions for installing HTTPRoute.

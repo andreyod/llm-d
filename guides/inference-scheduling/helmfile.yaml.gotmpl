@@ -27,6 +27,8 @@ environments:
     <<: *I
   digitalocean: &DO
     <<: *I
+  sglang: &SGL
+    <<: *I
   default: &DEFAULT
     <<: *I
 
@@ -66,10 +68,12 @@ releases:
       - {{ printf "infra-%s" $rn | quote }}
       {{- end }}
     values:
-      {{- if ne .Environment.Name "standalone" }}
-      - gaie-inference-scheduling/values.yaml
-      {{- else }}
+      {{- if eq .Environment.Name "standalone" }}
       - standalone-inference-scheduling/values.yaml
+      {{- else if eq .Environment.Name "sglang" }}
+      - gaie-inference-scheduling/values_sglang.yaml
+      {{- else }}
+      - gaie-inference-scheduling/values.yaml
       {{- end }}
     # Apply provider name if on GKE
     {{- if or (eq .Environment.Name "gke") (eq .Environment.Name "gke_tpu") }}
@@ -81,7 +85,7 @@ releases:
               enabled: true
     {{- end }}
     # Apply destination rule for anything istio
-    {{- if or (eq .Environment.Name "istio") (eq .Environment.Name "default") (eq .Environment.Name "amd") (eq .Environment.Name "xpu") (eq .Environment.Name "hpu") (eq .Environment.Name "cpu") }}
+    {{- if or (eq .Environment.Name "istio") (eq .Environment.Name "default") (eq .Environment.Name "amd") (eq .Environment.Name "xpu") (eq .Environment.Name "hpu") (eq .Environment.Name "cpu") (eq .Environment.Name "sglang") }}
       - provider:
           name: {{ .Environment.Values.provider.name }}
           istio:
@@ -117,6 +121,8 @@ releases:
       - ms-inference-scheduling/values_cpu.yaml
     {{- else if eq .Environment.Name "digitalocean" }}
       - ms-inference-scheduling/digitalocean-values.yaml
+    {{- else if eq .Environment.Name "sglang" }}
+      - ms-inference-scheduling/values_sglang.yaml
     {{- else }}
       - ms-inference-scheduling/values.yaml
     {{- end }}
