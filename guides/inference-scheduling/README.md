@@ -93,6 +93,14 @@ helmfile apply -e cpu  -n ${NAMESPACE} # targets istio as gateway provider with 
 
 This case expects using 4th Gen Intel Xeon processors (Sapphire Rapids) or later. 
 
+### Inference Server Options
+
+In the `inference-scheduling` well-lit path we suppport vLLM as the inference server for AI model serving, but for the default gateway(Istio) and hardware(GPUs) you may also deploy the SGLang inference server:
+
+```bash
+helmfile apply -e sglang -n ${NAMESPACE}
+```
+
 ### Install HTTPRoute
 
 Follow provider specific instructions for installing HTTPRoute.
