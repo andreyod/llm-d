@@ -27,8 +27,6 @@ environments:
     <<: *I
   digitalocean: &DO
     <<: *I
-  sglang: &SGL
-    <<: *I
   default: &DEFAULT
     <<: *I
 
@@ -70,7 +68,7 @@ releases:
     values:
       {{- if eq .Environment.Name "standalone" }}
       - standalone-inference-scheduling/values.yaml
-      {{- else if eq .Environment.Name "sglang" }}
+      {{- else if eq (env "INFERENCE_SERVER") "sglang" }}
       - gaie-inference-scheduling/values_sglang.yaml
       {{- else }}
       - gaie-inference-scheduling/values.yaml
@@ -85,7 +83,7 @@ releases:
               enabled: true
     {{- end }}
     # Apply destination rule for anything istio
-    {{- if or (eq .Environment.Name "istio") (eq .Environment.Name "default") (eq .Environment.Name "amd") (eq .Environment.Name "xpu") (eq .Environment.Name "hpu") (eq .Environment.Name "cpu") (eq .Environment.Name "sglang") }}
+    {{- if or (eq .Environment.Name "istio") (eq .Environment.Name "default") (eq .Environment.Name "amd") (eq .Environment.Name "xpu") (eq .Environment.Name "hpu") (eq .Environment.Name "cpu") }}
       - provider:
           name: {{ .Environment.Values.provider.name }}
           istio:
@@ -121,7 +119,7 @@ releases:
       - ms-inference-scheduling/values_cpu.yaml
     {{- else if eq .Environment.Name "digitalocean" }}
       - ms-inference-scheduling/digitalocean-values.yaml
-    {{- else if eq .Environment.Name "sglang" }}
+    {{- else if eq (env "INFERENCE_SERVER") "sglang" }}
       - ms-inference-scheduling/values_sglang.yaml
     {{- else }}
       - ms-inference-scheduling/values.yaml
