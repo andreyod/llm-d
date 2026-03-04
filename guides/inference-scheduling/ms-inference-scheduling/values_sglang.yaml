@@ -1,10 +1,16 @@
 multinode: false
 
 modelArtifacts:
-  uri: "hf://Qwen/Qwen3-0.6B"
-  name: "Qwen/Qwen3-0.6B"
-  size: 20Gi
+  uri: "hf://Qwen/Qwen3-32B"
+  name: "Qwen/Qwen3-32B"
+  size: 80Gi
   authSecretName: "llm-d-hf-token"
+  labels:
+    llm-d.ai/inference-serving: "true"
+    llm-d.ai/guide: "inference-scheduling"
+    llm-d.ai/accelerator-variant: "gpu"
+    llm-d.ai/accelerator-vendor: "nvidia"
+    llm-d.ai/model: "Qwen3-32B"
 
 routing:
   proxy:
@@ -51,14 +57,20 @@ decode:
     resources:
       limits:
         nvidia.com/gpu: "1"
+        cpu: "8"
+        memory: 32Gi
       requests:
         nvidia.com/gpu: "1"
+        cpu: "2"
+        memory: 16Gi
     mountModelVolume: true
     volumeMounts:
     - name: metrics-volume
       mountPath: /.config
     - name: torch-compile-cache
       mountPath: /.cache
+    - name: shm
+      mountPath: /dev/shm
     startupProbe:
       httpGet:
         path: /v1/models
@@ -86,6 +98,10 @@ decode:
     emptyDir: {}
   - name: torch-compile-cache
     emptyDir: {}
+  - name: dshm
+    emptyDir:
+      medium: Memory
+ 
 
 # PD disabled in this example
 prefill:

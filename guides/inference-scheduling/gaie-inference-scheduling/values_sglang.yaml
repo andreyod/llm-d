@@ -5,11 +5,11 @@ inferenceExtension:
     ###################
     name: llm-d-inference-scheduler
     hub: ghcr.io/llm-d
-    tag: v0.4.0
+    tag: v0.5.0
     ###################
     # name: epp
     # hub: registry.k8s.io/gateway-api-inference-extension
-    # tag: v1.2.0
+    # tag: v1.3.0
     ###################
     pullPolicy: Always
   extProcPort: 9002
@@ -18,7 +18,7 @@ inferenceExtension:
     total-queued-requests-metric: "sglang:num_queue_reqs"
     kv-cache-usage-percentage-metric: "sglang:token_usage"
     lora-info-metric: "" # Set an empty metric to disable LoRA metric scraping as they are not supported by SGLang yet.
-    cache-info-metric: ""
+    cache-info-metric: "" # Set an empty metric to disable CacheInfoMetrics metrics as not all vLLM used metrics has sglang equivalents 
   monitoring:
     interval: "10s"
     # Prometheus ServiceMonitor will be created when enabled for EPP metrics collection
