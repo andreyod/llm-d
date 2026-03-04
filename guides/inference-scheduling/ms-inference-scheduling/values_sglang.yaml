@@ -35,7 +35,7 @@ decode:
     command: ["python3", "-m", "sglang.launch_server"]
     args:
       - "--model-path"
-      - "Qwen/Qwen3-0.6B"
+      - "Qwen/Qwen3-32B"
       - "--host"
       - "0.0.0.0"
       - "--port"
