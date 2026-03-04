@@ -69,7 +69,7 @@ decode:
       mountPath: /.config
     - name: torch-compile-cache
       mountPath: /.cache
-    - name: shm
+    - name: dshm
       mountPath: /dev/shm
     startupProbe:
       httpGet:
