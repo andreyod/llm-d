@@ -1,7 +1,7 @@
 inferenceExtension:
   replicas: 1
   image:
-    # both downstream infernece-scheduler and upstream epp image can support inference-scheduling example
+    # both downstream inference-scheduler and upstream epp image can support inference-scheduling example
     ###################
     name: llm-d-inference-scheduler
     hub: ghcr.io/llm-d
@@ -32,6 +32,8 @@ inferenceExtension:
 inferencePool:
   targetPorts:
     - number: 8000
+  modelServerType: sglang
   modelServers:
     matchLabels:
-      llm-d.ai/inferenceServing: "true"
+      llm-d.ai/inference-serving: "true"
+      llm-d.ai/guide: "inference-scheduling"
