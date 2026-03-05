@@ -63,5 +63,5 @@ inferencePool:
   modelServerType: sglang
   modelServers:
     matchLabels:
-    llm-d.ai/inference-serving: "true"
-    llm-d.ai/guide: "pd-disaggregation"
+      llm-d.ai/inference-serving: "true"
+      llm-d.ai/guide: "pd-disaggregation"
