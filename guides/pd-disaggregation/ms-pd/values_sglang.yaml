@@ -5,6 +5,12 @@ modelArtifacts:
   size: 50Gi
   authSecretName: "llm-d-hf-token"
   name: "Qwen/Qwen3-14B"
+  labels:
+    llm-d.ai/inference-serving: "true"
+    llm-d.ai/guide: "pd-disaggregation"
+    llm-d.ai/hardware-variant: "gpu"
+    llm-d.ai/accelerator-vendor: "nvidia"
+    llm-d.ai/model: "Qwen3-14B"
 
 routing:
   servicePort: 8000
