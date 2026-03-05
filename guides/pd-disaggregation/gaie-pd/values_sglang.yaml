@@ -64,4 +64,4 @@ inferencePool:
   modelServers:
     matchLabels:
     llm-d.ai/inference-serving: "true"
-    llm-d.ai/guide: "inference-scheduling"
+    llm-d.ai/guide: "pd-disaggregation"
