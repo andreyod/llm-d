@@ -15,7 +15,7 @@ modelArtifacts:
 routing:
   servicePort: 8000
   proxy:
-    image: ghcr.io/llm-d/llm-d-routing-sidecar:v0.5.0
+    image: ghcr.io/llm-d/llm-d-routing-sidecar:v0.6.0
     connector: sglang
     secure: false
 
@@ -35,9 +35,6 @@ decode:
     image: docker.io/lmsysorg/sglang:v0.5.6.post2
     command: ["python3", "-m", "sglang.launch_server"]
     args:
-      # Keep tensor-parallelism as the first set of arguments
-      - "--tensor-parallel-size"
-      - "4"
       - "--model-path"
       - "Qwen/Qwen3-14B"
       - "--port"
@@ -48,10 +45,14 @@ decode:
       - "decode"
       - "--disaggregation-transfer-backend"
       - "nixl"
+      - "--tensor-parallel-size"
+      - "4"
       - "--log-level"
       - "debug"
       - "--enable-metrics"
       - "--log-requests"
+      - "--context-length"
+      - "32000"
     env:
       - name: TRITON_CACHE_DIR
         value: /.cache
@@ -63,11 +64,13 @@ decode:
       limits:
         memory: 64Gi
         cpu: "16"
-        nvidia.com/gpu: "4"
+        # note: GPU resources get controlled by parallelism + accelerators above
+        # rdma/ib: 1 # To use RDMA please uncomment this line.
       requests:
         memory: 64Gi
         cpu: "16"
-        nvidia.com/gpu: "4"
+        # note: GPU resources get controlled by parallelism + accelerators above
+        # rdma/ib: 1 # To use RDMA please uncomment this line.
     mountModelVolume: true
     volumeMounts:
     - name: metrics-volume
@@ -109,6 +112,8 @@ decode:
     emptyDir: {}
 
 prefill:
+  parallelism:
+    tensor: 1
   create: true
   replicas: 4
   monitoring:
@@ -136,6 +141,8 @@ prefill:
       - "debug"
       - "--enable-metrics"
       - "--log-requests"
+      - "--context-length"
+      - "32000"
     env:
       - name: TRITON_CACHE_DIR
         value: /.cache
@@ -147,11 +154,13 @@ prefill:
       limits:
         memory: 64Gi
         cpu: "8"
-        nvidia.com/gpu: "1"
+        # note: GPU resources get controlled by parallelism + accelerators above
+        # rdma/ib: 1 # To use RDMA please uncomment this line.
       requests:
         memory: 64Gi
         cpu: "8"
-        nvidia.com/gpu: "1"
+        # note: GPU resources get controlled by parallelism + accelerators above
+        # rdma/ib: 1 # To use RDMA please uncomment this line.
     mountModelVolume: true
     volumeMounts:
     - name: metrics-volume

@@ -21,3 +21,8 @@ cd guides/pd-disaggregation
 export INFERENCE_SERVER=sglang
 helmfile apply -n ${NAMESPACE}
 ```
+
+## Technical Notes
+
+- KV Cache Transfer: SGLang’s NIXL (UCX) integration defaults to TCP fallback if RDMA is unavailable. For optimal performance and minimized latency during transfer, it is recommended to utilize RDMA-capable transports (e.g., InfiniBand or RoCE).
+- Metrics Compatibility: Please note that vllm and SGLang utilize different metric naming conventions. Metrics are mapped within the GAIE configuration.
