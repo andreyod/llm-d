@@ -28,13 +28,11 @@ inferenceExtension:
       - type: prefill-filter
       - type: decode-filter
       - type: max-score-picker
-      - type: prefix-based-pd-decider
-        parameters:
-          nonCachedTokens: 16
+      - type: always-disagg-pd-decider
       - type: pd-profile-handler
         parameters:
           primaryPort: 0
-          deciderPluginName: prefix-based-pd-decider
+          deciderPluginName: always-disagg-pd-decider
       schedulingProfiles:
       - name: prefill
         plugins:

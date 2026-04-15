@@ -1,16 +1,16 @@
 multinode: false
 
 modelArtifacts:
-  uri: "hf://Qwen/Qwen3-14B"
+  uri: "hf://Qwen/Qwen3-0.6B"
   size: 50Gi
   authSecretName: "llm-d-hf-token"
-  name: "Qwen/Qwen3-14B"
+  name: "Qwen/Qwen3-0.6B"
   labels:
     llm-d.ai/inference-serving: "true"
     llm-d.ai/guide: "pd-disaggregation"
     llm-d.ai/hardware-variant: "gpu"
     llm-d.ai/accelerator-vendor: "nvidia"
-    llm-d.ai/model: "Qwen3-14B"
+    llm-d.ai/model: "Qwen3-0.6B"
 
 routing:
   servicePort: 8000
@@ -21,7 +21,7 @@ routing:
 
 decode:
   parallelism:
-    tensor: 4
+    tensor: 1
   create: true
   replicas: 1
   monitoring:
@@ -36,7 +36,7 @@ decode:
     command: ["python3", "-m", "sglang.launch_server"]
     args:
       - "--model-path"
-      - "Qwen/Qwen3-14B"
+      - "Qwen/Qwen3-0.6B"
       - "--port"
       - "8200"
       - "--host"
@@ -46,7 +46,7 @@ decode:
       - "--disaggregation-transfer-backend"
       - "nixl"
       - "--tensor-parallel-size"
-      - "4"
+      - "1"
       - "--log-level"
       - "debug"
       - "--enable-metrics"
@@ -128,7 +128,7 @@ prefill:
     command: ["python3", "-m", "sglang.launch_server"]
     args:
       - "--model-path"
-      - "Qwen/Qwen3-14B"
+      - "Qwen/Qwen3-0.6B"
       - "--port"
       - "8000"
       - "--host"

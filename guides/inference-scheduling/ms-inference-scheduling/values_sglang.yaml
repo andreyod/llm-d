@@ -1,28 +1,30 @@
 multinode: false
 
 modelArtifacts:
-  uri: "hf://Qwen/Qwen3-32B"
-  name: "Qwen/Qwen3-32B"
-  size: 80Gi
+  uri: "hf://Qwen/Qwen3-0.6B"
+  name: "Qwen/Qwen3-0.6B"
+  size: 20Gi
   authSecretName: "llm-d-hf-token"
   labels:
     llm-d.ai/inference-serving: "true"
     llm-d.ai/guide: "inference-scheduling"
     llm-d.ai/accelerator-variant: "gpu"
     llm-d.ai/accelerator-vendor: "nvidia"
-    llm-d.ai/model: "Qwen3-32B"
+    llm-d.ai/model: "Qwen3-0.6B"
 
 routing:
+  servicePort: 8000
   proxy:
-    enabled: false  # removes sidecar from deployment - no PD in inference scheduling
-    targetPort: 8000  # controls server port to matchup with sidecar if deployed
+    image: ghcr.io/llm-d/llm-d-routing-sidecar:v0.4.0
+    connector: sglang
+    secure: false
 
 accelerator:  # controls specialized hardware Type
   type: nvidia
 
 decode:
   create: true
-  replicas: 2
+  replicas: 1
   monitoring:
     podmonitor:
       enabled: true
@@ -35,11 +37,11 @@ decode:
     command: ["python3", "-m", "sglang.launch_server"]
     args:
       - "--model-path"
-      - "Qwen/Qwen3-32B"
+      - "Qwen/Qwen3-0.6B"
       - "--host"
       - "0.0.0.0"
       - "--port"
-      - "8000"
+      - "8200"
       - "--enable-metrics"
       - "--log-level"
       - "debug"
@@ -51,7 +53,7 @@ decode:
       - name: TRITON_CACHE_DIR
         value: /.cache
     ports:
-      - containerPort: 8000
+      - containerPort: 8200
         name: sglang
         protocol: TCP
     resources:

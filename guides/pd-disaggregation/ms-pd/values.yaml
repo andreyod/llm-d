@@ -9,16 +9,16 @@ multinode: false
 #     samplerArg: "0.1"
 
 modelArtifacts:
-  uri: "hf://openai/gpt-oss-120b"
-  size: 250Gi
+  uri: "hf://Qwen/Qwen3-0.6B"
+  size: 25Gi
   authSecretName: "llm-d-hf-token"
-  name: "openai/gpt-oss-120b"
+  name: "Qwen/Qwen3-0.6B"
   labels:
     llm-d.ai/inference-serving: "true"
     llm-d.ai/guide: "pd-disaggregation"
     llm-d.ai/hardware-variant: "gpu"
     llm-d.ai/accelerator-vendor: "nvidia"
-    llm-d.ai/model: "gpt-oss-120b"
+    llm-d.ai/model: "Qwen3-0.6B"
 
 routing:
   servicePort: 8000
@@ -29,7 +29,7 @@ routing:
 
 decode:
   parallelism:
-    tensor: 4
+    tensor: 1
   create: true
   replicas: 1
   monitoring:
@@ -64,15 +64,11 @@ decode:
           protocol: TCP
       resources:
         limits:
-          memory: 64Gi
-          cpu: "16"
+          cpu: "4"
           # note: GPU resources get controlled by parallelism + accelerators above
-          rdma/ib: 1
         requests:
-          memory: 64Gi
-          cpu: "16"
+          cpu: "4"
           # note: GPU resources get controlled by parallelism + accelerators above
-          rdma/ib: 1
       mountModelVolume: true
       volumeMounts:
         - name: metrics-volume
@@ -117,7 +113,7 @@ prefill:
   parallelism:
     tensor: 1
   create: true
-  replicas: 4
+  replicas: 1
   monitoring:
     podmonitor:
       enabled: true
@@ -150,15 +146,11 @@ prefill:
           protocol: TCP
       resources:
         limits:
-          memory: 64Gi
-          cpu: "8"
+          cpu: "4"
           # note: GPU resources get controlled by parallelism + accelerators above
-          rdma/ib: 1
         requests:
-          memory: 64Gi
-          cpu: "8"
+          cpu: "4"
           # note: GPU resources get controlled by parallelism + accelerators above
-          rdma/ib: 1
       mountModelVolume: true
       volumeMounts:
         - name: metrics-volume

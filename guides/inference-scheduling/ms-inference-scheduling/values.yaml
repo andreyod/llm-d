@@ -9,21 +9,23 @@ multinode: false
 #     samplerArg: "0.1"
 
 modelArtifacts:
-  uri: "hf://Qwen/Qwen3-32B"
-  name: "Qwen/Qwen3-32B"
-  size: 80Gi
+  uri: "hf://Qwen/Qwen3-0.6B"
+  name: "Qwen/Qwen3-0.6B"
+  size: 20Gi
   authSecretName: "llm-d-hf-token"
   labels:
     llm-d.ai/inference-serving: "true"
     llm-d.ai/guide: "inference-scheduling"
     llm-d.ai/accelerator-variant: "gpu"
     llm-d.ai/accelerator-vendor: "nvidia"
-    llm-d.ai/model: "Qwen3-32B"
+    llm-d.ai/model: "Qwen3-0.6B"
 
 routing:
+  servicePort: 8000
   proxy:
-    enabled: false  # removes sidecar from deployment - no PD in inference scheduling
-    targetPort: 8000  # controls vLLM port to matchup with sidecar if deployed
+    image: ghcr.io/llm-d/llm-d-routing-sidecar:v0.4.0
+    connector: nixlv2
+    secure: false
 
 accelerator:  # controls specialized hardware Type
   type: nvidia
@@ -31,9 +33,9 @@ accelerator:  # controls specialized hardware Type
 decode:
   create: true
   parallelism:
-    tensor: 2
+    tensor: 1
     data: 1
-  replicas: 8
+  replicas: 1
   monitoring:
     podmonitor:
       enabled: true
@@ -49,18 +51,18 @@ decode:
         - "--gpu-memory-utilization=0.95"
         # - "--tensor-parallel-size=2" # added automatically from 'parallelism'
       ports:
-        - containerPort: 8000
+        - containerPort: 8200
           name: vllm
           protocol: TCP
       resources:
         limits:
           # nvidia.com/gpu: '2' # added automatically from 'parallelism'
-          cpu: '32'
-          memory: 100Gi
+          cpu: '8'
+          memory: 20Gi
         requests:
           # nvidia.com/gpu: '2' # added automatically from 'parallelism'
-          cpu: '32'
-          memory: 100Gi
+          cpu: '8'
+          memory: 20Gi
       mountModelVolume: true
       volumeMounts:
         - name: metrics-volume
